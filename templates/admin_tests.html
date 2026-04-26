@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Monitoring — EduBotAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ════════════════════════════════════
+           DARK THEME TOKENS  (amber = admin)
+        ════════════════════════════════════ */
+        :root {
+            --bg:           #020d18;
+            --orb-1:        rgba(245, 158, 11, 0.18);
+            --orb-2:        rgba(0,  80, 210, 0.22);
+            --orb-3:        rgba(245, 120, 11, 0.10);
+            --glass:        rgba(255,255,255,0.055);
+            --glass-md:     rgba(255,255,255,0.09);
+            --glass-hi:     rgba(255,255,255,0.13);
+            --gb:           rgba(255,255,255,0.10);
+            --gb-hover:     rgba(245,158,11,0.40);
+            --text:         #e8f5ff;
+            --text-2:       rgba(232,245,255,0.55);
+            --text-3:       rgba(232,245,255,0.28);
+            --amber:        #f59e0b;
+            --amber-soft:   rgba(245,158,11,0.14);
+            --amber-glow:   rgba(245,158,11,0.25);
+            --cyan:         #00d4e8;
+            --green:        #00e8a0;
+            --nav-bg:       rgba(2,13,24,0.72);
+            --select-bg:    #0a1a28;
+            --noise-op:     0.038;
+        }
+
+        /* ════════════════════════════════════
+           LIGHT THEME TOKENS
+        ════════════════════════════════════ */
+        [data-theme="light"] {
+            --bg:           #fdf6e8;
+            --orb-1:        rgba(245, 158, 11, 0.18);
+            --orb-2:        rgba(0,   70, 190, 0.10);
+            --orb-3:        rgba(245, 120, 11, 0.10);
+            --glass:        rgba(255,255,255,0.55);
+            --glass-md:     rgba(255,255,255,0.70);
+            --glass-hi:     rgba(255,255,255,0.85);
+            --gb:           rgba(180,130,0,0.14);
+            --gb-hover:     rgba(180,120,0,0.38);
+            --text:         #1a0e00;
+            --text-2:       rgba(26,14,0,0.55);
+            --text-3:       rgba(26,14,0,0.35);
+            --amber:        #b45309;
+            --amber-soft:   rgba(180,83,9,0.10);
+            --amber-glow:   rgba(180,83,9,0.18);
+            --cyan:         #006e8a;
+            --green:        #008060;
+            --nav-bg:       rgba(253,246,232,0.80);
+            --select-bg:    #fff;
+            --noise-op:     0.016;
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Instrument Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.45s ease, color 0.45s ease;
+        }
+
+        /* ── Animated orb background ── */
+        .bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(95px);
+            animation: floatOrb 16s ease-in-out infinite alternate;
+            transition: background 0.45s;
+        }
+        .orb-1 { width: 680px; height: 680px; background: var(--orb-1); top: -220px; right: -160px; animation-delay: 0s; }
+        .orb-2 { width: 580px; height: 580px; background: var(--orb-2); bottom: -120px; left: -120px; animation-delay: -7s; }
+        .orb-3 { width: 400px; height: 400px; background: var(--orb-3); top: 40%; left: 40%; animation-delay: -12s; }
+        @keyframes floatOrb {
+            from { transform: translate(0,0) scale(1); }
+            to   { transform: translate(30px,38px) scale(1.08); }
+        }
+
+        .bg-noise {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            opacity: var(--noise-op);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 180px 180px;
+            transition: opacity 0.45s;
+        }
+
+        /* ════════════════════════════════════
+           NAVBAR
+        ════════════════════════════════════ */
+        nav {
+            position: sticky; top: 0; z-index: 999;
+            height: 64px;
+            background: var(--nav-bg);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            border-bottom: 1px solid var(--gb);
+            padding: 0 clamp(1rem, 5vw, 4rem);
+            display: flex; align-items: center; justify-content: space-between;
+            transition: background 0.45s;
+        }
+        .logo {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1.32rem; font-weight: 800;
+            letter-spacing: -0.035em;
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none; color: var(--text);
+        }
+        .logo-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: var(--amber);
+            box-shadow: 0 0 10px var(--amber-glow);
+            animation: pulseDot 2.6s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+        @keyframes pulseDot {
+            0%,100% { transform: scale(1);   box-shadow: 0 0 10px var(--amber-glow); }
+            50%      { transform: scale(1.35); box-shadow: 0 0 20px var(--amber-glow); }
+        }
+        .logo-text em { color: var(--amber); font-style: normal; }
+
+        .nav-right { display: flex; align-items: center; gap: 8px; }
+        .nav-btn {
+            font-family: 'Instrument Sans', sans-serif;
+            font-size: 0.8rem; font-weight: 600;
+            text-decoration: none;
+            padding: 7px 14px; border-radius: 10px;
+            border: 1px solid var(--gb); background: var(--glass);
+            backdrop-filter: blur(12px); color: var(--text-2);
+            transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .nav-btn:hover { color: var(--text); border-color: var(--gb-hover); background: var(--glass-md); }
+
+        .theme-btn {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: var(--glass); border: 1px solid var(--gb);
+            backdrop-filter: blur(12px);
+            cursor: pointer; display: grid; place-items: center;
+            font-size: 1rem; transition: all 0.2s;
+        }
+        .theme-btn:hover { background: var(--glass-md); border-color: var(--gb-hover); }
+        .icon-moon { display: block; } .icon-sun { display: none; }
+        [data-theme="light"] .icon-moon { display: none; }
+        [data-theme="light"] .icon-sun  { display: block; }
+
+        /* ════════════════════════════════════
+           PAGE CONTENT
+        ════════════════════════════════════ */
+        .page-wrap {
+            position: relative; z-index: 1;
+            max-width: 1100px; margin: 0 auto;
+            padding: clamp(2rem, 5vw, 3.5rem) clamp(1rem, 5vw, 2rem);
+            animation: fadeUp 0.55s ease both;
+        }
+
+        /* ── Page header ── */
+        .page-header {
+            display: flex; align-items: flex-end; justify-content: space-between;
+            flex-wrap: wrap; gap: 1rem;
+            margin-bottom: 2.5rem;
+        }
+        .page-eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--amber-soft);
+            border: 1px solid rgba(245,158,11,0.25);
+            color: var(--amber);
+            font-size: 0.65rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            padding: 4px 12px; border-radius: 99px;
+            margin-bottom: 0.6rem;
+        }
+        .page-eyebrow::before { content: '●'; font-size: 0.45rem; }
+
+        .page-title {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: clamp(1.7rem, 3.5vw, 2.4rem);
+            font-weight: 800; letter-spacing: -0.04em;
+            line-height: 1.1;
+        }
+        .page-title em {
+            background: linear-gradient(130deg, var(--amber) 0%, #fbbf24 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-style: normal;
+        }
+        .page-sub {
+            color: var(--text-2); font-size: 0.88rem; margin-top: 0.4rem;
+        }
+
+        /* ── Stats row ── */
+        .stats-row {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 12px; margin-bottom: 2rem;
+        }
+        .stat-chip {
+            background: var(--glass); border: 1px solid var(--gb);
+            backdrop-filter: blur(20px);
+            border-radius: 16px; padding: 18px 20px;
+            position: relative; overflow: hidden;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .stat-chip::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(245,158,11,0.4), transparent);
+        }
+        .stat-chip:hover { background: var(--glass-md); border-color: var(--gb-hover); }
+        .stat-chip-num {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1.9rem; font-weight: 800; letter-spacing: -0.04em;
+            background: linear-gradient(135deg, var(--amber) 0%, #fbbf24 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+        .stat-chip-lbl {
+            font-size: 0.68rem; color: var(--text-3);
+            margin-top: 5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+        }
+
+        /* ════════════════════════════════════
+           TABLE CARD
+        ════════════════════════════════════ */
+        .table-card {
+            background: var(--glass); border: 1px solid var(--gb);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border-radius: 20px; overflow: hidden;
+            position: relative;
+        }
+        /* Amber top accent */
+        .table-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent 5%, rgba(245,158,11,0.65) 50%, transparent 95%);
+            z-index: 2;
+        }
+        /* Inner sheen */
+        .table-card::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        /* Table */
+        table { width: 100%; border-collapse: collapse; }
+
+        thead {
+            background: rgba(0,0,0,0.18);
+            border-bottom: 1px solid var(--gb);
+        }
+        [data-theme="light"] thead { background: rgba(0,0,0,0.04); }
+
+        thead th {
+            font-size: 0.65rem; font-weight: 700;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--text-3);
+            padding: 14px 20px; text-align: left;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--gb);
+            transition: background 0.18s;
+        }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: var(--glass-md); }
+
+        td { padding: 16px 20px; font-size: 0.88rem; vertical-align: middle; }
+
+        /* Test ID — monospace pill */
+        .test-id {
+            font-family: 'Courier New', monospace;
+            font-size: 0.7rem; color: var(--text-3);
+            background: var(--glass-md); border: 1px solid var(--gb);
+            padding: 3px 8px; border-radius: 6px;
+            display: inline-block; max-width: 160px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+
+        /* Teacher name */
+        .teacher-name {
+            font-weight: 600; color: var(--amber);
+            display: flex; align-items: center; gap: 7px;
+        }
+
+        /* Date */
+        .date-text { color: var(--text-2); }
+
+        /* Submission badge */
+        .sub-badge {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 36px; height: 26px;
+            background: var(--amber-soft);
+            border: 1px solid rgba(245,158,11,0.30);
+            color: var(--amber);
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 0.78rem; font-weight: 800;
+            border-radius: 8px; padding: 0 10px;
+        }
+        .sub-badge.zero {
+            background: var(--glass); border-color: var(--gb);
+            color: var(--text-3);
+        }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center; padding: 4rem 2rem;
+            color: var(--text-3);
+        }
+        .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.5; }
+        .empty-state p { font-size: 0.9rem; }
+
+        /* ════════════════════════════════════
+           ANIMATIONS
+        ════════════════════════════════════ */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(22px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ════════════════════════════════════
+           RESPONSIVE
+        ════════════════════════════════════ */
+        @media (max-width: 700px) {
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            thead th:first-child, td:first-child { display: none; }
+        }
+        @media (max-width: 480px) {
+            .stats-row { grid-template-columns: 1fr; }
+            .page-header { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-mesh">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="bg-noise"></div>
+
+    <!-- ════════════════ NAVBAR ════════════════ -->
+    <nav>
+        <a href="/" class="logo">
+            <div class="logo-dot"></div>
+            <span class="logo-text">EduBot<em>AI</em></span>
+        </a>
+        <div class="nav-right">
+            <a href="/admin/dashboard" class="nav-btn">← Admin Dashboard</a>
+            <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">
+                <span class="icon-moon">🌙</span>
+                <span class="icon-sun">☀️</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ════════════════ PAGE ════════════════ -->
+    <div class="page-wrap">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <div class="page-eyebrow">Admin · Test Monitoring</div>
+                <h1 class="page-title">📝 Active Tests <em>Monitor</em></h1>
+                <p class="page-sub">Live feed of all tests created by teachers across the platform.</p>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <div class="stat-chip">
+                <div class="stat-chip-num">{{ tests | length }}</div>
+                <div class="stat-chip-lbl">Total Tests</div>
+            </div>
+            <div class="stat-chip">
+                <div class="stat-chip-num">{{ tests | sum(attribute='sub_count') }}</div>
+                <div class="stat-chip-lbl">Total Submissions</div>
+            </div>
+            <div class="stat-chip">
+                <div class="stat-chip-num">{{ tests | selectattr('sub_count', 'gt', 0) | list | length }}</div>
+                <div class="stat-chip-lbl">Active Tests</div>
+            </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test ID</th>
+                        <th>Created By (Teacher)</th>
+                        <th>Date Created</th>
+                        <th>Submissions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test in tests %}
+                    <tr>
+                        <td><span class="test-id">{{ test.TestSession.id }}</span></td>
+                        <td><span class="teacher-name">👨‍🏫 {{ test.author_name }}</span></td>
+                        <td><span class="date-text">{{ test.TestSession.created_at.strftime('%Y-%m-%d') }}</span></td>
+                        <td>
+                            <span class="sub-badge {% if test.sub_count == 0 %}zero{% endif %}">
+                                {{ test.sub_count }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    {% if not tests %}
+                    <tr>
+                        <td colspan="4">
+                            <div class="empty-state">
+                                <div class="empty-icon">📋</div>
+                                <p>No tests have been created yet.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- ════════════════ THEME SCRIPT ════════════════ -->
+    <script>
+        const html = document.documentElement;
+        const btn  = document.getElementById('themeBtn');
+        if (localStorage.getItem('edubot-theme') === 'light') html.setAttribute('data-theme', 'light');
+        btn.addEventListener('click', () => {
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('edubot-theme', next);
+        });
+    </script>
+
+</body>
+</html>

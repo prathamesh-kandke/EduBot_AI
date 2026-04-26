@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print Test — EduBotAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════
+           SCREEN STYLES (Glassmorphism UI)
+        ═══════════════════════════════════════ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ── DARK TOKENS ── */
+        :root {
+            --bg:           #020d18;
+            --orb-1:        rgba(0, 190, 210, 0.30);
+            --orb-2:        rgba(0, 80,  210, 0.26);
+            --orb-3:        rgba(0, 230, 165, 0.16);
+            --glass:        rgba(255,255,255,0.055);
+            --glass-md:     rgba(255,255,255,0.09);
+            --glass-hi:     rgba(255,255,255,0.13);
+            --gb:           rgba(255,255,255,0.10);
+            --gb-hover:     rgba(0,212,232,0.35);
+            --text:         #e8f5ff;
+            --text-2:       rgba(232,245,255,0.55);
+            --text-3:       rgba(232,245,255,0.28);
+            --cyan:         #00d4e8;
+            --cyan-soft:    rgba(0,212,232,0.12);
+            --cyan-glow:    rgba(0,212,232,0.22);
+            --green:        #00e8a0;
+            --green-soft:   rgba(0,232,160,0.12);
+            --nav-bg:       rgba(2,13,24,0.72);
+            --input-bg:     rgba(0,0,0,0.22);
+            --noise-op:     0.038;
+        }
+
+        /* ── LIGHT TOKENS ── */
+        [data-theme="light"] {
+            --bg:           #dff2fc;
+            --orb-1:        rgba(0, 150, 185, 0.22);
+            --orb-2:        rgba(0,  70, 190, 0.14);
+            --orb-3:        rgba(0, 190, 140, 0.16);
+            --glass:        rgba(255,255,255,0.52);
+            --glass-md:     rgba(255,255,255,0.66);
+            --glass-hi:     rgba(255,255,255,0.82);
+            --gb:           rgba(0,140,175,0.16);
+            --gb-hover:     rgba(0,122,155,0.40);
+            --text:         #021824;
+            --text-2:       rgba(2,24,36,0.56);
+            --text-3:       rgba(2,24,36,0.36);
+            --cyan:         #006e8a;
+            --cyan-soft:    rgba(0,110,138,0.10);
+            --cyan-glow:    rgba(0,110,138,0.14);
+            --green:        #008060;
+            --green-soft:   rgba(0,128,96,0.10);
+            --nav-bg:       rgba(215,240,252,0.78);
+            --input-bg:     rgba(255,255,255,0.55);
+            --noise-op:     0.018;
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Instrument Sans', sans-serif;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; overflow-x: hidden;
+            display: flex; flex-direction: column;
+            transition: background 0.45s, color 0.45s;
+        }
+
+        /* ── Animated orb background ── */
+        .bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .orb {
+            position: absolute; border-radius: 50%; filter: blur(95px);
+            animation: floatOrb 16s ease-in-out infinite alternate;
+            transition: background 0.45s;
+        }
+        .orb-1 { width: 680px; height: 680px; background: var(--orb-1); top: -220px; left: -160px; }
+        .orb-2 { width: 560px; height: 560px; background: var(--orb-2); bottom: -120px; right: -100px; animation-delay: -6s; }
+        .orb-3 { width: 400px; height: 400px; background: var(--orb-3); top: 45%; left: 38%; animation-delay: -10s; }
+        @keyframes floatOrb {
+            from { transform: translate(0,0) scale(1); }
+            to   { transform: translate(32px,40px) scale(1.09); }
+        }
+
+        .bg-noise {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            opacity: var(--noise-op);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 180px; transition: opacity 0.45s;
+        }
+
+        /* ══════════════════════════════════
+           NAVBAR
+        ══════════════════════════════════ */
+        nav {
+            position: sticky; top: 0; z-index: 999;
+            height: 62px;
+            background: var(--nav-bg);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            border-bottom: 1px solid var(--gb);
+            padding: 0 clamp(1rem,5vw,4rem);
+            display: flex; align-items: center; justify-content: space-between;
+            transition: background 0.45s;
+        }
+
+        .logo {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1.25rem; font-weight: 800; letter-spacing: -0.03em;
+            text-decoration: none; color: var(--text);
+            display: flex; align-items: center; gap: 9px;
+        }
+        .logo-dot {
+            width: 9px; height: 9px; border-radius: 50%;
+            background: var(--cyan); box-shadow: 0 0 10px var(--cyan-glow);
+            animation: pulseDot 2.6s ease-in-out infinite;
+        }
+        @keyframes pulseDot {
+            0%,100%{ transform:scale(1);   box-shadow:0 0 10px var(--cyan-glow); }
+            50%    { transform:scale(1.35); box-shadow:0 0 20px var(--cyan-glow); }
+        }
+        .logo em { color: var(--cyan); font-style: normal; }
+
+        .nav-right { display: flex; align-items: center; gap: 8px; }
+
+        .theme-btn {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: var(--glass); border: 1px solid var(--gb);
+            backdrop-filter: blur(10px); cursor: pointer;
+            display: grid; place-items: center; font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        .theme-btn:hover { background: var(--glass-md); border-color: var(--gb-hover); }
+        .icon-moon { display: block; } .icon-sun { display: none; }
+        [data-theme="light"] .icon-moon { display: none; }
+        [data-theme="light"] .icon-sun  { display: block; }
+
+        /* ══════════════════════════════════
+           ACTION BAR
+        ══════════════════════════════════ */
+        .action-bar {
+            position: relative; z-index: 1;
+            max-width: 900px; margin: 0 auto; width: 100%;
+            padding: 28px 28px 0;
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+            animation: floatIn 0.6s ease both;
+        }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 10px 20px; border-radius: 12px;
+            font-size: 0.9rem; font-weight: 700; text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s, filter 0.2s, background 0.2s;
+            cursor: pointer; border: none; font-family: 'Bricolage Grotesque', sans-serif;
+        }
+        .btn:hover { transform: translateY(-2px); }
+
+        .btn-print {
+            background: linear-gradient(135deg, #00c4d8 0%, #00e8a0 100%);
+            color: #021824; box-shadow: 0 4px 16px rgba(0,212,232,0.25);
+        }
+        .btn-print:hover { box-shadow: 0 8px 24px rgba(0,212,232,0.4); filter: brightness(1.07); }
+
+        .btn-back {
+            background: var(--glass); border: 1px solid var(--gb);
+            color: var(--text); backdrop-filter: blur(10px);
+        }
+        .btn-back:hover { background: var(--glass-md); border-color: var(--gb-hover); }
+
+        /* Page info chips */
+        .info-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+        .chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--glass); border: 1px solid var(--gb);
+            border-radius: 8px; padding: 5px 12px;
+            font-size: 0.74rem; font-weight: 600; color: var(--text-2);
+            backdrop-filter: blur(10px);
+        }
+
+        /* ══════════════════════════════════
+           MAIN PAPER
+        ══════════════════════════════════ */
+        .main {
+            position: relative; z-index: 1;
+            max-width: 900px; margin: 0 auto; width: 100%;
+            padding: 24px 28px 60px;
+        }
+
+        /* Paper card — the printable area */
+        .paper {
+            background: var(--glass); border: 1px solid var(--gb);
+            backdrop-filter: blur(34px) saturate(180%);
+            -webkit-backdrop-filter: blur(34px) saturate(180%);
+            border-radius: 24px; overflow: hidden;
+            transition: background 0.4s, border-color 0.4s;
+            animation: floatIn 0.6s ease 0.1s both;
+            box-shadow: 0 32px 64px -16px rgba(0,0,0,0.3);
+        }
+        .paper::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, transparent 50%);
+            pointer-events: none; border-radius: inherit;
+        }
+
+        /* Paper header */
+        .paper-header {
+            padding: 32px 36px 24px;
+            border-bottom: 1px solid var(--gb);
+            text-align: center; position: relative; z-index: 1;
+        }
+        .paper-header::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, transparent, var(--cyan), var(--green), transparent);
+        }
+        .paper-school { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cyan); margin-bottom: 8px; }
+        .paper-subject { font-family: 'Bricolage Grotesque', sans-serif; font-size: 2rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 6px; }
+        .paper-topic { font-size: 0.88rem; color: var(--text-2); font-weight: 400; }
+
+        /* Student info row */
+        .student-info-row {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+            padding: 20px 36px;
+            border-bottom: 1px solid var(--gb);
+            position: relative; z-index: 1;
+            background: var(--input-bg);
+        }
+        .info-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; }
+        .info-line {
+            height: 32px; border-bottom: 1.5px dashed var(--gb);
+            display: flex; align-items: flex-end; padding-bottom: 4px;
+            font-size: 0.82rem; color: var(--text-3); font-style: italic;
+        }
+
+        /* Questions */
+        .questions-wrap { padding: 32px 36px; display: flex; flex-direction: column; gap: 28px; position: relative; z-index: 1; }
+
+        .q-block { position: relative; }
+        .q-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+        .q-number {
+            background: var(--cyan-soft); border: 1px solid rgba(0,212,232,0.25);
+            color: var(--cyan); border-radius: 8px; padding: 4px 10px;
+            font-size: 0.75rem; font-weight: 800; flex-shrink: 0; margin-top: 2px;
+            font-family: 'Bricolage Grotesque', sans-serif;
+        }
+        .q-marks {
+            background: var(--green-soft); border: 1px solid rgba(0,232,160,0.25);
+            color: var(--green); border-radius: 8px; padding: 4px 10px;
+            font-size: 0.72rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;
+        }
+        .q-text { font-size: 0.95rem; font-weight: 600; line-height: 1.6; color: var(--text); flex: 1; }
+
+        /* Options */
+        .options-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-left: 52px; }
+        .opt-item {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--input-bg); border: 1px solid var(--gb);
+            border-radius: 12px; padding: 10px 14px;
+            font-size: 0.88rem; color: var(--text-2);
+        }
+        .opt-letter {
+            width: 26px; height: 26px; border-radius: 6px; flex-shrink: 0;
+            background: var(--glass-md); border: 1px solid var(--gb);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 800; color: var(--text);
+            font-family: 'Bricolage Grotesque', sans-serif;
+        }
+        .checkbox-box {
+            width: 18px; height: 18px; border-radius: 5px; flex-shrink: 0;
+            border: 1.5px solid var(--gb); background: var(--glass);
+        }
+
+        /* Subjective write space */
+        .write-space {
+            margin-left: 52px; margin-top: 4px;
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .write-line {
+            height: 1px; background: var(--gb);
+            border-radius: 1px; opacity: 0.6;
+        }
+
+        /* Question divider */
+        .q-divider { height: 1px; background: var(--gb); margin-top: 28px; opacity: 0.6; }
+
+        @keyframes floatIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 640px) {
+            nav { padding: 12px 18px; }
+            .action-bar, .main { padding-left: 16px; padding-right: 16px; }
+            .paper-header { padding: 24px 20px 18px; }
+            .student-info-row { grid-template-columns: 1fr; padding: 16px 20px; }
+            .questions-wrap { padding: 20px 20px; }
+            .options-list, .write-space { margin-left: 0; }
+        }
+
+        /* ═══════════════════════════════════════
+           PRINT STYLES — Clean black & white
+        ═══════════════════════════════════════ */
+        @media print {
+            /* Hide all UI chrome */
+            .bg-mesh, .bg-noise, nav, .action-bar { display: none !important; }
+
+            body {
+                font-family: Arial, Helvetica, sans-serif;
+                background: white !important; color: #000 !important;
+                padding: 0; margin: 0;
+            }
+
+            .main { padding: 0; max-width: 100%; }
+
+            .paper {
+                background: white !important; border: none !important;
+                border-radius: 0 !important; box-shadow: none !important;
+                backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+            }
+
+            .paper-header {
+                border-bottom: 2px solid #000 !important;
+                padding: 16px 20px 12px !important;
+            }
+            .paper-header::before { display: none !important; }
+            .paper-school { color: #555 !important; font-family: Arial, sans-serif; }
+            .paper-subject { font-size: 1.6rem !important; color: #000 !important; font-family: Arial, sans-serif; }
+            .paper-topic { color: #333 !important; }
+
+            .student-info-row {
+                background: white !important;
+                border-bottom: 1px solid #aaa !important;
+                padding: 12px 20px !important;
+            }
+            .info-label { color: #555 !important; }
+            .info-line { border-color: #999 !important; color: transparent !important; }
+
+            .questions-wrap { padding: 20px 20px !important; gap: 24px !important; }
+
+            .q-number {
+                background: #f0f0f0 !important; border: 1px solid #ccc !important;
+                color: #000 !important; -webkit-print-color-adjust: exact;
+            }
+            .q-marks {
+                background: #fff !important; border: 1px solid #888 !important;
+                color: #333 !important; -webkit-print-color-adjust: exact;
+            }
+            .q-text { color: #000 !important; font-weight: normal !important; }
+
+            .opt-item { background: white !important; border: 1px solid #ccc !important; color: #000 !important; }
+            .opt-letter { background: #eee !important; border: 1px solid #bbb !important; color: #000 !important; -webkit-print-color-adjust: exact; }
+            .checkbox-box { background: white !important; border: 1.5px solid #555 !important; }
+
+            .write-line { background: #aaa !important; -webkit-print-color-adjust: exact; }
+            .q-divider  { background: #ddd !important; -webkit-print-color-adjust: exact; }
+
+            /* Page breaks */
+            .q-block { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-mesh">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="bg-noise"></div>
+
+    <nav class="no-print">
+        <a href="/" class="logo">
+            <div class="logo-dot"></div>
+            EduBot<em>AI</em>
+        </a>
+        <div class="nav-right">
+            <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">
+                <span class="icon-moon">🌙</span>
+                <span class="icon-sun">☀️</span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="action-bar no-print">
+        <button onclick="window.print()" class="btn btn-print">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+            Print / Save as PDF
+        </button>
+        <a href="javascript:history.back()" class="btn btn-back">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            Go Back
+        </a>
+        <div class="info-chips">
+            <span class="chip">📚 {{ params.get('subject', 'General') }}</span>
+            <span class="chip">📝 {{ questions | length }} Questions</span>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="paper" id="printArea">
+
+            <div class="paper-header">
+                <div class="paper-school">EduBotAI · Smart Examination</div>
+                <div class="paper-subject">{{ params.get('subject', 'General') }} Examination</div>
+                <div class="paper-topic">Topic: {{ params.get('topic', 'N/A') }} &nbsp;·&nbsp; Board: {{ params.get('board', 'General') }}</div>
+            </div>
+
+            <div class="student-info-row">
+                <div class="info-field">
+                    <div class="info-label">Student Name</div>
+                    <div class="info-line"></div>
+                </div>
+                <div class="info-field">
+                    <div class="info-label">Date</div>
+                    <div class="info-line"></div>
+                </div>
+                <div class="info-field">
+                    <div class="info-label">Score</div>
+                    <div class="info-line">_____ / _____</div>
+                </div>
+            </div>
+
+            <div class="questions-wrap">
+                {% set letters = ['a','b','c','d','e','f','g','h'] %}
+                {% set letters_upper = ['A','B','C','D','E','F','G','H'] %}
+
+                {% for q in questions %}
+                <div class="q-block">
+                    <div class="q-header">
+                        <span class="q-number">Q{{ loop.index }}</span>
+                        <span class="q-marks">{{ q.marks }} mark{% if q.marks != 1 %}s{% endif %}</span>
+                        <div class="q-text">{{ q.question_text }}</div>
+                    </div>
+
+                    {% set q_type = q.question_type | lower %}
+
+                    {% if q_type in ['objective', 'mcq'] or ('multiple' not in q_type and q.parsed_options | length > 0) %}
+                    <ul class="options-list">
+                        {% for opt in q.parsed_options %}
+                        <li class="opt-item">
+                            <span class="opt-letter">{{ letters_upper[loop.index0] if loop.index0 < 8 else loop.index }}</span>
+                            {{ opt }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+
+                    {% elif 'multiple' in q_type %}
+                    <ul class="options-list">
+                        {% for opt in q.parsed_options %}
+                        <li class="opt-item">
+                            <span class="checkbox-box"></span>
+                            <span class="opt-letter">{{ letters_upper[loop.index0] if loop.index0 < 8 else loop.index }}</span>
+                            {{ opt }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+
+                    {% else %}
+                    <div class="write-space">
+                        <div class="write-line"></div>
+                        <div class="write-line"></div>
+                        <div class="write-line"></div>
+                        <div class="write-line"></div>
+                        <div class="write-line"></div>
+                    </div>
+                    {% endif %}
+
+                    {% if not loop.last %}
+                    <div class="q-divider"></div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        /* Theme toggle logic */
+        const html = document.documentElement;
+        const themeBtn = document.getElementById('themeToggle') || document.getElementById('themeBtn');
+        if (localStorage.getItem('edubot-theme') === 'light') html.setAttribute('data-theme', 'light');
+
+        if (themeBtn) {
+            themeBtn.addEventListener('click', () => {
+                const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                html.setAttribute('data-theme', next);
+                localStorage.setItem('edubot-theme', next);
+            });
+        }
+
+        /* Auto-open print dialog on load for convenience */
+        window.onload = () => {
+            // Optional: Uncomment the line below to auto-print as soon as the page loads
+            // window.print();
+        };
+    </script>
+
+</body>
+</html>

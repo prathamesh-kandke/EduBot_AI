@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register — EduBotAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ════════════════════════════════════
+           DARK THEME TOKENS
+        ════════════════════════════════════ */
+        :root {
+            --bg:           #020d18;
+            --orb-1:        rgba(0, 190, 210, 0.30);
+            --orb-2:        rgba(0, 80,  210, 0.26);
+            --orb-3:        rgba(0, 230, 165, 0.16);
+            --glass:        rgba(255,255,255,0.055);
+            --glass-md:     rgba(255,255,255,0.09);
+            --glass-hi:     rgba(255,255,255,0.13);
+            --gb:           rgba(255,255,255,0.10);
+            --gb-hover:     rgba(0,212,232,0.35);
+            --text:         #e8f5ff;
+            --text-2:       rgba(232,245,255,0.55);
+            --text-3:       rgba(232,245,255,0.28);
+            --cyan:         #00d4e8;
+            --cyan-soft:    rgba(0,212,232,0.15);
+            --cyan-glow:    rgba(0,212,232,0.22);
+            --green:        #00e8a0;
+            --nav-bg:       rgba(2,13,24,0.72);
+            --select-bg:    #0a1a28;
+            --noise-op:     0.038;
+            --danger:       #f87171;
+            --danger-bg:    rgba(248,113,113,0.08);
+            --danger-border:rgba(248,113,113,0.35);
+            --str-bg:       rgba(255,255,255,0.10);
+        }
+
+        /* ════════════════════════════════════
+           LIGHT THEME TOKENS
+        ════════════════════════════════════ */
+        [data-theme="light"] {
+            --bg:           #dff2fc;
+            --orb-1:        rgba(0, 150, 185, 0.22);
+            --orb-2:        rgba(0,  70, 190, 0.14);
+            --orb-3:        rgba(0, 190, 140, 0.16);
+            --glass:        rgba(255,255,255,0.52);
+            --glass-md:     rgba(255,255,255,0.66);
+            --glass-hi:     rgba(255,255,255,0.82);
+            --gb:           rgba(0,140,175,0.16);
+            --gb-hover:     rgba(0,122,155,0.40);
+            --text:         #021824;
+            --text-2:       rgba(2,24,36,0.56);
+            --text-3:       rgba(2,24,36,0.36);
+            --cyan:         #006e8a;
+            --cyan-soft:    rgba(0,110,138,0.10);
+            --cyan-glow:    rgba(0,110,138,0.14);
+            --green:        #008060;
+            --nav-bg:       rgba(215,240,252,0.78);
+            --select-bg:    #fff;
+            --noise-op:     0.018;
+            --danger:       #dc2626;
+            --danger-bg:    rgba(220,38,38,0.07);
+            --danger-border:rgba(220,38,38,0.30);
+            --str-bg:       rgba(0,0,0,0.10);
+        }
+
+        /* ════════════════════════════════════
+           BASE
+        ════════════════════════════════════ */
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Instrument Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.45s ease, color 0.45s ease;
+        }
+
+        /* ── Animated orb background ── */
+        .bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(95px);
+            animation: floatOrb 16s ease-in-out infinite alternate;
+            transition: background 0.45s;
+        }
+        .orb-1 { width: 720px; height: 720px; background: var(--orb-1); top: -240px; left: -170px; animation-delay: 0s; }
+        .orb-2 { width: 620px; height: 620px; background: var(--orb-2); bottom: -120px; right: -120px; animation-delay: -6s; }
+        .orb-3 { width: 460px; height: 460px; background: var(--orb-3); top: 38%; left: 34%; animation-delay: -10s; }
+        @keyframes floatOrb {
+            from { transform: translate(0, 0) scale(1); }
+            to   { transform: translate(34px, 42px) scale(1.09); }
+        }
+
+        /* ── Film grain noise ── */
+        .bg-noise {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            opacity: var(--noise-op);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 180px 180px;
+            transition: opacity 0.45s;
+        }
+
+        /* ════════════════════════════════════
+           NAVBAR
+        ════════════════════════════════════ */
+        nav {
+            position: sticky; top: 0; z-index: 999;
+            height: 64px;
+            background: var(--nav-bg);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            border-bottom: 1px solid var(--gb);
+            padding: 0 clamp(1rem, 5vw, 4rem);
+            display: flex; align-items: center; justify-content: space-between;
+            transition: background 0.45s;
+        }
+
+        .logo {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1.32rem; font-weight: 800;
+            letter-spacing: -0.035em;
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none; color: var(--text);
+        }
+        .logo-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: var(--cyan);
+            box-shadow: 0 0 10px var(--cyan-glow);
+            animation: pulseDot 2.6s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+        @keyframes pulseDot {
+            0%, 100% { transform: scale(1);   box-shadow: 0 0 10px var(--cyan-glow); }
+            50%       { transform: scale(1.35); box-shadow: 0 0 20px var(--cyan-glow); }
+        }
+        .logo-text em { color: var(--cyan); font-style: normal; }
+
+        .nav-right { display: flex; align-items: center; gap: 8px; }
+
+        .nav-link {
+            font-family: 'Instrument Sans', sans-serif;
+            font-size: 0.8rem; font-weight: 600;
+            text-decoration: none;
+            padding: 7px 16px; border-radius: 10px;
+            border: 1px solid var(--gb); background: var(--glass);
+            backdrop-filter: blur(12px);
+            color: var(--text-2);
+            transition: all 0.2s;
+        }
+        .nav-link:hover { color: var(--text); border-color: var(--gb-hover); background: var(--glass-md); }
+        .nav-link.primary {
+            background: var(--cyan-soft);
+            border-color: var(--gb-hover);
+            color: var(--cyan);
+        }
+        .nav-link.primary:hover { background: rgba(0,212,232,0.22); }
+
+        /* Dark / light toggle */
+        .theme-btn {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: var(--glass); border: 1px solid var(--gb);
+            backdrop-filter: blur(12px);
+            cursor: pointer; display: grid; place-items: center;
+            font-size: 1rem; transition: all 0.2s;
+        }
+        .theme-btn:hover { background: var(--glass-md); border-color: var(--gb-hover); }
+        .icon-moon { display: block; } .icon-sun { display: none; }
+        [data-theme="light"] .icon-moon { display: none; }
+        [data-theme="light"] .icon-sun  { display: block; }
+
+        /* ════════════════════════════════════
+           PAGE LAYOUT
+        ════════════════════════════════════ */
+        .page-wrap {
+            position: relative; z-index: 1;
+            min-height: calc(100vh - 64px);
+            display: flex; align-items: center; justify-content: center;
+            padding: 3rem clamp(1rem, 5vw, 2rem);
+        }
+
+        /* ════════════════════════════════════
+           REGISTER CARD
+        ════════════════════════════════════ */
+        .reg-card {
+            width: 100%; max-width: 440px;
+            background: var(--glass);
+            border: 1px solid var(--gb);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border-radius: 24px;
+            padding: clamp(2rem, 5vw, 2.75rem);
+            position: relative; overflow: hidden;
+            box-shadow: 0 32px 64px rgba(0,0,0,0.28), 0 0 0 1px var(--gb);
+            animation: fadeUp 0.55s ease both;
+        }
+        /* Top accent shimmer */
+        .reg-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent 5%, rgba(0,212,232,0.55) 50%, transparent 95%);
+            pointer-events: none;
+        }
+        /* Subtle inner sheen */
+        .reg-card::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(145deg, rgba(255,255,255,0.06) 0%, transparent 50%);
+            border-radius: inherit; pointer-events: none;
+        }
+
+        /* ── Card header ── */
+        .card-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative; z-index: 1;
+        }
+        .card-icon {
+            font-size: 2.8rem; line-height: 1;
+            display: inline-block; margin-bottom: 0.7rem;
+        }
+        .card-title {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1.7rem; font-weight: 800;
+            letter-spacing: -0.035em;
+            margin-bottom: 0.3rem;
+        }
+        .card-sub { color: var(--text-2); font-size: 0.88rem; }
+
+        /* ── Flash messages ── */
+        .flash-msg {
+            background: var(--danger-bg);
+            border: 1px solid var(--danger-border);
+            color: var(--danger);
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem; font-weight: 500;
+            position: relative; z-index: 1;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .flash-msg::before { content: '⚠️'; font-size: 1rem; flex-shrink: 0; }
+
+        /* ── Role selector ── */
+        .role-label-heading {
+            font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 0.09em; text-transform: uppercase;
+            color: var(--text-3); margin-bottom: 0.6rem;
+            display: block;
+            position: relative; z-index: 1;
+        }
+
+        .role-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 8px; margin-bottom: 1.5rem;
+            position: relative; z-index: 1;
+        }
+        .role-radio { display: none; }
+        .role-tile {
+            background: var(--glass-md);
+            border: 1px solid var(--gb);
+            padding: 14px 12px;
+            border-radius: 14px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            font-size: 0.82rem; font-weight: 600;
+            color: var(--text-2);
+            user-select: none;
+        }
+        .role-tile:hover { background: var(--glass-hi); border-color: var(--gb-hover); color: var(--text); }
+        .role-radio:checked + .role-tile {
+            background: var(--cyan-soft);
+            border-color: var(--cyan);
+            color: var(--cyan);
+            box-shadow: 0 0 18px var(--cyan-glow), inset 0 0 12px rgba(0,212,232,0.05);
+        }
+        .role-emoji { font-size: 1.4rem; }
+
+        /* ── Form fields ── */
+        .form-group {
+            margin-bottom: 1.2rem;
+            position: relative; z-index: 1;
+        }
+        .form-label {
+            display: block;
+            font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 0.09em; text-transform: uppercase;
+            color: var(--text-3); margin-bottom: 0.5rem;
+        }
+        .form-input {
+            width: 100%;
+            background: var(--glass-md);
+            border: 1px solid var(--gb);
+            color: var(--text);
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            font-family: 'Instrument Sans', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+        .form-input:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 3px var(--cyan-glow);
+            background: var(--glass-hi);
+        }
+        .form-input::placeholder { color: var(--text-3); }
+
+        /* password field with eye toggle */
+        .pw-wrap { position: relative; }
+        .pw-wrap .form-input { padding-right: 2.8rem; }
+        .toggle-pw {
+            position: absolute; right: 0.9rem; top: 50%; transform: translateY(-50%);
+            background: none; border: none;
+            color: var(--text-3); cursor: pointer;
+            font-size: 1.1rem; line-height: 1;
+            transition: color 0.2s;
+            padding: 4px;
+        }
+        .toggle-pw:hover { color: var(--text-2); }
+
+        /* ── Password strength meter ── */
+        .strength-bar {
+            display: flex; gap: 4px; margin-top: 0.65rem;
+        }
+        .str-seg {
+            height: 3px; border-radius: 99px; flex: 1;
+            background: var(--str-bg);
+            transition: background 0.3s;
+        }
+        .strength-hint {
+            font-size: 0.7rem; font-weight: 600;
+            color: var(--text-3);
+            text-align: right; margin-top: 0.35rem;
+            transition: color 0.3s;
+        }
+
+        /* ── Submit button ── */
+        .btn-submit {
+            width: 100%; margin-top: 0.75rem;
+            background: linear-gradient(135deg, var(--cyan) 0%, var(--green) 100%);
+            color: #021824;
+            border: none;
+            padding: 0.95rem 1rem;
+            border-radius: 12px;
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1rem; font-weight: 700;
+            cursor: pointer;
+            position: relative; z-index: 1;
+            transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px var(--cyan-glow);
+            letter-spacing: -0.01em;
+        }
+        .btn-submit:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px var(--cyan-glow);
+        }
+        .btn-submit:active { transform: translateY(0); }
+
+        /* ── Footer links ── */
+        .footer-links {
+            text-align: center;
+            margin-top: 1.75rem;
+            font-size: 0.85rem;
+            color: var(--text-2);
+            position: relative; z-index: 1;
+        }
+        .footer-links a {
+            color: var(--cyan);
+            text-decoration: none;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+        .footer-links a:hover { opacity: 0.75; }
+
+        .divider {
+            border: none;
+            border-top: 1px solid var(--gb);
+            margin: 1rem 0;
+        }
+        .back-link {
+            color: var(--text-3) !important;
+            font-size: 0.8rem !important;
+            font-weight: 500 !important;
+        }
+        .back-link:hover { color: var(--text-2) !important; }
+
+        /* ════════════════════════════════════
+           ANIMATIONS
+        ════════════════════════════════════ */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(22px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ════════════════════════════════════
+           RESPONSIVE
+        ════════════════════════════════════ */
+        @media (max-width: 480px) {
+            .nav-link { display: none; }
+            .reg-card { border-radius: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ── Background ── -->
+    <div class="bg-mesh">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="bg-noise"></div>
+
+    <!-- ════════════════ NAVBAR ════════════════ -->
+    <nav>
+        <a href="/" class="logo">
+            <div class="logo-dot"></div>
+            <span class="logo-text">EduBot<em>AI</em></span>
+        </a>
+
+        <div class="nav-right">
+            <a href="/login" class="nav-link">Login</a>
+            <a href="/register" class="nav-link primary">Register →</a>
+
+            <!-- Dark / Light toggle -->
+            <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">
+                <span class="icon-moon">🌙</span>
+                <span class="icon-sun">☀️</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ════════════════ PAGE CONTENT ════════════════ -->
+    <div class="page-wrap">
+        <div class="reg-card">
+
+            <!-- Header -->
+            <div class="card-header">
+                <div id="cardIcon" class="card-icon">🚀</div>
+                <h2 id="cardTitle" class="card-title">Join EduBotAI</h2>
+                <p id="cardSub" class="card-sub">Create your account to get started.</p>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-msg">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Form -->
+            <form method="POST" action="/register">
+
+                <!-- Role selector -->
+                <span class="role-label-heading">I am registering as</span>
+                <div class="role-grid">
+                    <input type="radio" id="role_student" name="role" value="student" class="role-radio" checked>
+                    <label for="role_student" class="role-tile">
+                        <span class="role-emoji">👨‍🎓</span>
+                        Student
+                    </label>
+
+                    <input type="radio" id="role_teacher" name="role" value="teacher" class="role-radio">
+                    <label for="role_teacher" class="role-tile">
+                        <span class="role-emoji">👨‍🏫</span>
+                        Teacher
+                    </label>
+                </div>
+
+                <!-- Username -->
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" name="username" placeholder="Choose a unique username" required class="form-input" autocomplete="username">
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <div class="pw-wrap">
+                        <input type="password" id="pwInput" name="password" placeholder="Create a strong password" required class="form-input" autocomplete="new-password">
+                        <button type="button" id="togglePw" class="toggle-pw" aria-label="Toggle password visibility">👁️</button>
+                    </div>
+                    <div class="strength-bar">
+                        <div id="seg1" class="str-seg"></div>
+                        <div id="seg2" class="str-seg"></div>
+                        <div id="seg3" class="str-seg"></div>
+                        <div id="seg4" class="str-seg"></div>
+                    </div>
+                    <div id="strengthLabel" class="strength-hint">Enter a password</div>
+                </div>
+
+                <button type="submit" class="btn-submit">Create Account →</button>
+            </form>
+
+            <!-- Footer links -->
+            <div class="footer-links">
+                Already have an account? <a href="/login">Log in here</a>
+                <hr class="divider">
+                <a href="/" class="back-link">← Back to Home</a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ════════════════ SCRIPTS ════════════════ -->
+    <script>
+        /* ── Theme Toggle ── */
+        const html = document.documentElement;
+        const themeBtn = document.getElementById('themeBtn');
+        if (localStorage.getItem('edubot-theme') === 'light') html.setAttribute('data-theme', 'light');
+        themeBtn.addEventListener('click', () => {
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('edubot-theme', next);
+        });
+
+        /* ── Role card switcher ── */
+        const roleData = {
+            student: { icon: '🚀', title: 'Join as Student', sub: 'Unlock AI-powered learning.' },
+            teacher: { icon: '🎓', title: 'Join as Teacher', sub: 'Create and evaluate tests with AI.' }
+        };
+        function updateGreeting(role) {
+            const d = roleData[role];
+            const icon  = document.getElementById('cardIcon');
+            const title = document.getElementById('cardTitle');
+            const sub   = document.getElementById('cardSub');
+            [icon, title, sub].forEach(el => {
+                el.style.transition = 'opacity 0.18s, transform 0.18s';
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-6px)';
+            });
+            setTimeout(() => {
+                icon.textContent  = d.icon;
+                title.textContent = d.title;
+                sub.textContent   = d.sub;
+                [icon, title, sub].forEach(el => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                });
+            }, 180);
+        }
+        document.getElementById('role_student').addEventListener('change', () => updateGreeting('student'));
+        document.getElementById('role_teacher').addEventListener('change', () => updateGreeting('teacher'));
+
+        /* ── Password visibility toggle ── */
+        const pwInput  = document.getElementById('pwInput');
+        const togglePw = document.getElementById('togglePw');
+        togglePw.addEventListener('click', function () {
+            const show = pwInput.type === 'password';
+            pwInput.type = show ? 'text' : 'password';
+            this.textContent = show ? '🙈' : '👁️';
+        });
+
+        /* ── Password strength meter ── */
+        const segs = [1,2,3,4].map(i => document.getElementById('seg' + i));
+        const strengthLabel = document.getElementById('strengthLabel');
+        const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e'];
+        const labels = ['Weak', 'Fair', 'Good', 'Strong 💪'];
+
+        function getStrength(pw) {
+            let score = 0;
+            if (pw.length >= 6)  score++;
+            if (pw.length >= 10) score++;
+            if (/[A-Z]/.test(pw) && /[0-9]/.test(pw)) score++;
+            if (/[^A-Za-z0-9]/.test(pw)) score++;
+            return score;
+        }
+
+        pwInput.addEventListener('input', function () {
+            const val = this.value;
+            if (!val) {
+                segs.forEach(s => s.style.background = 'var(--str-bg)');
+                strengthLabel.textContent = 'Enter a password';
+                strengthLabel.style.color = 'var(--text-3)';
+                return;
+            }
+            const score = getStrength(val);
+            segs.forEach((s, i) => {
+                s.style.background = (i < score) ? colors[score - 1] : 'var(--str-bg)';
+            });
+            strengthLabel.textContent = labels[score - 1] || labels[0];
+            strengthLabel.style.color = colors[score - 1] || colors[0];
+        });
+    </script>
+</body>
+</html>

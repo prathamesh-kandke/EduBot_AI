@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard — EduBotAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ══════════════════════════════════
+           DARK TOKENS
+        ══════════════════════════════════ */
+        :root {
+            --bg:           #020d18;
+            --orb-1:        rgba(0, 190, 210, 0.30);
+            --orb-2:        rgba(0, 80,  210, 0.26);
+            --orb-3:        rgba(0, 230, 165, 0.16);
+            --glass:        rgba(255,255,255,0.055);
+            --glass-md:     rgba(255,255,255,0.09);
+            --glass-hi:     rgba(255,255,255,0.13);
+            --gb:           rgba(255,255,255,0.10);
+            --gb-hover:     rgba(0,212,232,0.35);
+            --text:         #e8f5ff;
+            --text-2:       rgba(232,245,255,0.55);
+            --text-3:       rgba(232,245,255,0.28);
+            --cyan:         #00d4e8;
+            --cyan-soft:    rgba(0,212,232,0.12);
+            --cyan-glow:    rgba(0,212,232,0.22);
+            --green:        #00e8a0;
+            --danger:       rgba(255,80,80,0.10);
+            --danger-b:     rgba(255,100,100,0.38);
+            --danger-text:  #fca5a5;
+            --success:      rgba(34,197,94,0.12);
+            --success-b:    rgba(34,197,94,0.4);
+            --success-text: #86efac;
+            --info:         rgba(14,165,233,0.12);
+            --info-b:       rgba(14,165,233,0.4);
+            --info-text:    #7dd3fc;
+            --nav-bg:       rgba(2,13,24,0.72);
+            --input-bg:     rgba(0,0,0,0.22);
+            --noise-op:     0.038;
+            --section-bg:   rgba(255,255,255,0.02);
+            --select-bg:    #0a1a28;
+        }
+
+        /* ══════════════════════════════════
+           LIGHT TOKENS
+        ══════════════════════════════════ */
+        [data-theme="light"] {
+            --bg:           #dff2fc;
+            --orb-1:        rgba(0, 150, 185, 0.22);
+            --orb-2:        rgba(0,  70, 190, 0.14);
+            --orb-3:        rgba(0, 190, 140, 0.16);
+            --glass:        rgba(255,255,255,0.52);
+            --glass-md:     rgba(255,255,255,0.66);
+            --glass-hi:     rgba(255,255,255,0.82);
+            --gb:           rgba(0,140,175,0.16);
+            --gb-hover:     rgba(0,122,155,0.40);
+            --text:         #021824;
+            --text-2:       rgba(2,24,36,0.56);
+            --text-3:       rgba(2,24,36,0.36);
+            --cyan:         #006e8a;
+            --cyan-soft:    rgba(0,110,138,0.10);
+            --cyan-glow:    rgba(0,110,138,0.14);
+            --green:        #008060;
+            --danger:       rgba(220,50,50,0.07);
+            --danger-b:     rgba(200,60,60,0.35);
+            --danger-text:  #b91c1c;
+            --success:      rgba(21,128,61,0.08);
+            --success-b:    rgba(21,128,61,0.3);
+            --success-text: #15803d;
+            --info:         rgba(3,105,161,0.08);
+            --info-b:       rgba(3,105,161,0.3);
+            --info-text:    #0369a1;
+            --nav-bg:       rgba(215,240,252,0.78);
+            --input-bg:     rgba(255,255,255,0.55);
+            --noise-op:     0.018;
+            --section-bg:   rgba(255,255,255,0.3);
+            --select-bg:    #fff;
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Instrument Sans', sans-serif;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; overflow-x: hidden;
+            display: flex; flex-direction: column;
+            transition: background 0.45s, color 0.45s;
+        }
+
+        /* ── Orb background ── */
+        .bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .orb {
+            position: absolute; border-radius: 50%; filter: blur(95px);
+            animation: floatOrb 16s ease-in-out infinite alternate;
+            transition: background 0.45s;
+        }
+        .orb-1 { width: 680px; height: 680px; background: var(--orb-1); top: -220px; left: -160px; }
+        .orb-2 { width: 560px; height: 560px; background: var(--orb-2); bottom: -120px; right: -100px; animation-delay: -6s; }
+        .orb-3 { width: 400px; height: 400px; background: var(--orb-3); top: 45%; left: 38%; animation-delay: -10s; }
+        @keyframes floatOrb {
+            from { transform: translate(0,0) scale(1); }
+            to   { transform: translate(32px,40px) scale(1.09); }
+        }
+
+        .bg-noise {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            opacity: var(--noise-op);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 180px; transition: opacity 0.45s;
+        }
+
+        /* ══════════════════════════════════
+           NAVBAR
+        ══════════════════════════════════ */
+        nav {
+            position: sticky; top: 0; z-index: 999;
+            height: 62px;
+            background: var(--nav-bg);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            border-bottom: 1px solid var(--gb);
+            padding: 0 clamp(1rem,5vw,4rem);
+            display: flex; align-items: center; justify-content: space-between;
+            transition: background 0.45s;
+        }
+
+        .logo {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1.25rem; font-weight: 800; letter-spacing: -0.03em;
+            text-decoration: none; color: var(--text);
+            display: flex; align-items: center; gap: 9px;
+        }
+        .logo-dot {
+            width: 9px; height: 9px; border-radius: 50%;
+            background: var(--cyan); box-shadow: 0 0 10px var(--cyan-glow);
+            animation: pulseDot 2.6s ease-in-out infinite;
+        }
+        @keyframes pulseDot {
+            0%,100%{ transform:scale(1);   box-shadow:0 0 10px var(--cyan-glow); }
+            50%    { transform:scale(1.35); box-shadow:0 0 20px var(--cyan-glow); }
+        }
+        .logo em { color: var(--cyan); font-style: normal; }
+
+        .nav-right { display: flex; align-items: center; gap: 8px; }
+        .nav-btn {
+            font-size: 0.8rem; font-weight: 600; color: var(--text-2);
+            text-decoration: none; padding: 6px 14px; border-radius: 10px;
+            border: 1px solid var(--gb); background: var(--glass);
+            backdrop-filter: blur(10px); transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .nav-btn:hover { color: var(--text); border-color: var(--gb-hover); background: var(--glass-md); }
+
+        .theme-btn {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: var(--glass); border: 1px solid var(--gb);
+            backdrop-filter: blur(10px); cursor: pointer;
+            display: grid; place-items: center; font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        .theme-btn:hover { background: var(--glass-md); border-color: var(--gb-hover); }
+        .icon-moon { display: block; } .icon-sun { display: none; }
+        [data-theme="light"] .icon-moon { display: none; }
+        [data-theme="light"] .icon-sun  { display: block; }
+
+        /* ══════════════════════════════════
+           MAIN
+        ══════════════════════════════════ */
+        main {
+            position: relative; z-index: 1;
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            padding: clamp(2rem,6vh,4rem) clamp(1rem,4vw,2rem);
+            max-width: 900px; margin: 0 auto; width: 100%;
+        }
+
+        /* ── Page Header ── */
+        .page-header { text-align: center; margin-bottom: 2rem; animation: fadeUp 0.5s ease both; }
+        .page-eyebrow {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--glass); border: 1px solid var(--gb);
+            padding: 4px 14px; border-radius: 99px;
+            font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
+            text-transform: uppercase; color: var(--cyan); margin-bottom: 0.75rem;
+        }
+        .page-title {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 800;
+            letter-spacing: -0.04em; line-height: 1.1;
+        }
+        .page-title span {
+            background: linear-gradient(130deg, var(--cyan) 0%, var(--green) 100%);
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* ── Flash Messages ── */
+        .msg-box {
+            width: 100%; padding: 12px 18px; border-radius: 12px;
+            font-size: 0.85rem; font-weight: 600; margin-bottom: 1.5rem;
+            backdrop-filter: blur(8px); display: flex; align-items: center; gap: 8px;
+            animation: fadeUp 0.5s ease 0.1s both;
+        }
+        .msg-error { background: var(--danger); border: 1px solid var(--danger-b); color: var(--danger-text); border-left: 3px solid rgba(255,80,80,0.7); }
+        .msg-success { background: var(--success); border: 1px solid var(--success-b); color: var(--success-text); border-left: 3px solid rgba(34,197,94,0.7); }
+        .msg-info { background: var(--info); border: 1px solid var(--info-b); color: var(--info-text); border-left: 3px solid rgba(14,165,233,0.7); }
+
+        /* ── Main Form Card ── */
+        .form-card {
+            width: 100%;
+            background: var(--glass); border: 1px solid var(--gb);
+            backdrop-filter: blur(34px) saturate(180%);
+            -webkit-backdrop-filter: blur(34px) saturate(180%);
+            border-radius: 26px; padding: clamp(1.5rem, 5vw, 3rem);
+            position: relative; overflow: hidden;
+            box-shadow: 0 32px 64px -16px rgba(0,0,0,0.3);
+            animation: riseUp 0.6s cubic-bezier(0.2,0,0,1) 0.15s both;
+        }
+        /* Top line */
+        .form-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent 5%, rgba(0,212,232,0.6) 50%, transparent 95%);
+        }
+
+        /* ── Method Selector ── */
+        .section-lbl {
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
+            text-transform: uppercase; color: var(--text-3); margin-bottom: 0.8rem;
+            display: block; position: relative; z-index: 1;
+        }
+        .method-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+            margin-bottom: 2rem; position: relative; z-index: 1;
+        }
+        .method-radio { display: none; }
+        .method-tile {
+            background: var(--glass-md); border: 1px solid var(--gb);
+            padding: 16px 12px; border-radius: 14px;
+            cursor: pointer; text-align: center; transition: all 0.2s;
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            user-select: none;
+        }
+        .method-tile:hover { background: var(--glass-hi); border-color: var(--gb-hover); }
+        .method-radio:checked + .method-tile {
+            background: var(--cyan-soft); border-color: var(--cyan);
+            box-shadow: 0 0 16px var(--cyan-glow), inset 0 0 12px rgba(0,212,232,0.05);
+        }
+        .method-icon { font-size: 1.5rem; }
+        .method-title { font-size: 0.85rem; font-weight: 700; color: var(--text); }
+        .method-sub { font-size: 0.72rem; color: var(--text-3); line-height: 1.3; }
+
+        .divider { height: 1px; background: var(--gb); margin: 2rem 0; position: relative; z-index: 1; }
+
+        /* ── Form Sections ── */
+        .form-section {
+            background: var(--section-bg); border: 1px solid var(--gb);
+            border-radius: 18px; padding: 1.5rem; margin-bottom: 1rem;
+            position: relative; z-index: 1;
+        }
+        .sec-title {
+            font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em;
+            text-transform: uppercase; color: var(--cyan);
+            margin-bottom: 1.2rem; display: flex; align-items: center; gap: 8px;
+        }
+        .sec-title::after { content: ''; flex: 1; height: 1px; background: var(--gb); }
+
+        /* ── Fields ── */
+        .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 1.2rem; }
+        .field { margin-bottom: 1.2rem; }
+        .field:last-child { margin-bottom: 0; }
+
+        .field-label {
+            display: block; font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            color: var(--text-3); margin-bottom: 0.4rem;
+        }
+
+        .form-control {
+            width: 100%; padding: 0.85rem 1rem;
+            background: var(--input-bg); border: 1px solid var(--gb);
+            border-radius: 12px; color: var(--text);
+            font-family: 'Instrument Sans', sans-serif; font-size: 0.9rem;
+            outline: none; transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+            backdrop-filter: blur(8px);
+        }
+        .form-control::placeholder { color: var(--text-3); }
+        .form-control:focus {
+            border-color: var(--cyan); box-shadow: 0 0 0 3px var(--cyan-soft);
+            background: var(--glass-md);
+        }
+        textarea.form-control { resize: vertical; min-height: 120px; line-height: 1.6; }
+
+        /* Selects */
+        .select-wrap { position: relative; }
+        .select-wrap select { padding-right: 36px; cursor: pointer; appearance: none; }
+        .select-arrow {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            pointer-events: none; color: var(--text-3); font-size: 0.8rem;
+        }
+        select option { background: var(--select-bg); color: var(--text); }
+
+        /* Checkbox */
+        .check-wrap { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .check-input { display: none; }
+        .check-box {
+            width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+            background: var(--input-bg); border: 1px solid var(--gb);
+            display: grid; place-items: center; transition: all 0.2s;
+        }
+        .check-input:checked + .check-box {
+            background: var(--cyan); border-color: var(--cyan);
+        }
+        .check-box svg { opacity: 0; transition: opacity 0.2s; }
+        .check-input:checked + .check-box svg { opacity: 1; stroke: #021824; }
+        .check-lbl { font-size: 0.88rem; color: var(--text-2); user-select: none; }
+
+        /* ── Custom File Upload ── */
+        .file-zone {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: 2px dashed var(--gb); background: var(--input-bg);
+            border-radius: 14px; padding: 2.5rem 1.5rem; text-align: center;
+            cursor: pointer; transition: all 0.2s; backdrop-filter: blur(8px);
+            position: relative;
+        }
+        .file-zone.dragging, .file-zone:hover { border-color: var(--cyan); background: var(--glass-md); }
+        .file-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .file-icon { font-size: 2.2rem; margin-bottom: 0.5rem; opacity: 0.8; transition: transform 0.2s; }
+        .file-zone:hover .file-icon { transform: translateY(-4px); opacity: 1; }
+        .file-title { font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .file-sub { font-size: 0.75rem; color: var(--text-3); }
+        .file-name {
+            display: none; margin-top: 12px; font-size: 0.8rem; font-weight: 700; color: var(--cyan);
+            background: var(--cyan-soft); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(0,212,232,0.2);
+        }
+
+        /* ── Submit button ── */
+        .btn-submit {
+            width: 100%; margin-top: 2rem;
+            background: linear-gradient(135deg, #00c4d8 0%, #00e8a0 100%);
+            color: #021824; border: none; padding: 1.1rem; border-radius: 14px;
+            font-family: 'Bricolage Grotesque', sans-serif; font-size: 1.05rem; font-weight: 800;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 9px;
+            position: relative; z-index: 1; letter-spacing: -0.01em;
+            box-shadow: 0 4px 22px rgba(0,212,232,0.25);
+            transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px); filter: brightness(1.06);
+            box-shadow: 0 8px 30px rgba(0,212,232,0.4);
+        }
+        .btn-submit:active { transform: translateY(0); }
+
+        .hidden { display: none !important; }
+
+        @keyframes riseUp {
+            from { opacity:0; transform: translateY(26px) scale(0.98); }
+            to   { opacity:1; transform: translateY(0) scale(1); }
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+            .method-grid { grid-template-columns: 1fr; }
+            .field-grid { grid-template-columns: 1fr; gap: 1.2rem; }
+            .nav-btn span { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-mesh">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="bg-noise"></div>
+
+    <nav>
+        <a href="/" class="logo">
+            <div class="logo-dot"></div>
+            EduBot<em>AI</em>
+        </a>
+        <div class="nav-right">
+            <a href="{{ url_for('landing_page') }}" class="nav-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                <span>Change Role</span>
+            </a>
+            <a href="{{ url_for('dashboard_page') }}" class="nav-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                <span>Past Tests</span>
+            </a>
+            <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">
+                <span class="icon-moon">🌙</span>
+                <span class="icon-sun">☀️</span>
+            </button>
+        </div>
+    </nav>
+
+    <main>
+
+        <div class="page-header">
+            <div class="page-eyebrow">👨‍🏫 Teacher Portal</div>
+            <h1 class="page-title"><span>{{ lang_strings.welcome_message }}</span></h1>
+        </div>
+
+        {% if message %}
+        <div class="msg-box msg-{{ message_type }}">
+            {% if message_type == 'error' %}⚠️{% elif message_type == 'success' %}✅{% else %}ℹ️{% endif %}
+            {{ message }}
+        </div>
+        {% endif %}
+
+        <div class="form-card">
+            <form action="{{ url_for('teacher_page') }}" method="post" enctype="multipart/form-data" id="teacherForm">
+
+                <span class="section-lbl">{{ lang_strings.choose_generation_method }}</span>
+                <div class="method-grid">
+                    <label>
+                        <input type="radio" class="method-radio" name="generation_method" value="default" onchange="toggleGenerationMethod(this.value)" {% if generation_method == 'default' or not generation_method %}checked{% endif %}>
+                        <div class="method-tile">
+                            <span class="method-icon">⚙️</span>
+                            <span class="method-title">{{ lang_strings.method_default }}</span>
+                            <span class="method-sub">Subject, topic, difficulty & more</span>
+                        </div>
+                    </label>
+                    <label>
+                        <input type="radio" class="method-radio" name="generation_method" value="custom_prompt" onchange="toggleGenerationMethod(this.value)" {% if generation_method == 'custom_prompt' %}checked{% endif %}>
+                        <div class="method-tile">
+                            <span class="method-icon">✍️</span>
+                            <span class="method-title">{{ lang_strings.method_custom_prompt }}</span>
+                            <span class="method-sub">Write your own AI prompt</span>
+                        </div>
+                    </label>
+                    <label>
+                        <input type="radio" class="method-radio" name="generation_method" value="pdf_upload" onchange="toggleGenerationMethod(this.value)" {% if generation_method == 'pdf_upload' %}checked{% endif %}>
+                        <div class="method-tile">
+                            <span class="method-icon">📄</span>
+                            <span class="method-title">{{ lang_strings.method_pdf_upload }}</span>
+                            <span class="method-sub">Upload a PDF & AI reads it</span>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="divider"></div>
+
+                <div id="default-params" class="hidden">
+
+                    <div class="form-section">
+                        <div class="sec-title">📚 Content</div>
+                        <div class="field-grid">
+                            <div class="field">
+                                <label class="field-label" for="subject">{{ lang_strings.subject }}</label>
+                                <input type="text" id="subject" name="subject" value="{{ params.subject }}" placeholder="e.g. Mathematics" class="form-control">
+                            </div>
+                            <div class="field">
+                                <label class="field-label" for="topic">{{ lang_strings.topic }}</label>
+                                <input type="text" id="topic" name="topic" value="{{ params.topic }}" placeholder="e.g. Algebra" class="form-control">
+                            </div>
+                        </div>
+                        <div class="field-grid">
+                            <div class="field">
+                                <label class="field-label" for="board">{{ lang_strings.board }}</label>
+                                <input type="text" id="board" name="board" value="{{ params.board }}" placeholder="e.g. CBSE, ICSE" class="form-control">
+                            </div>
+                            <div class="field">
+                                <label class="field-label" for="motive">{{ lang_strings.motive }}</label>
+                                <input type="text" id="motive" name="motive" value="{{ params.motive }}" placeholder="e.g. Mid-term Exam" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="sec-title">🎓 Student Profile</div>
+                        <div class="field-grid">
+                            <div class="field">
+                                <label class="field-label" for="age">{{ lang_strings.age }}</label>
+                                <input type="number" id="age" name="age" value="{{ params.age }}" min="1" placeholder="e.g. 16" class="form-control">
+                            </div>
+                            <div class="field">
+                                <label class="field-label" for="student_class">{{ lang_strings.student_class }}</label>
+                                <input type="text" id="student_class" name="student_class" value="{{ params.student_class }}" placeholder="e.g. Grade 10" class="form-control">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="field-label" for="gender">{{ lang_strings.gender }}</label>
+                            <input type="text" id="gender" name="gender" value="{{ params.gender }}" placeholder="e.g. Male, Female, Any" class="form-control">
+                        </div>
+                        <div class="field-grid">
+                            <div class="field">
+                                <label class="field-label" for="avg_marks">{{ lang_strings.avg_marks }}</label>
+                                <input type="number" id="avg_marks" name="avg_marks" value="{{ params.avg_marks }}" min="0" max="100" placeholder="0–100" class="form-control">
+                            </div>
+                            <div class="field">
+                                <label class="field-label" for="prev_tests">{{ lang_strings.prev_tests }}</label>
+                                <input type="text" id="prev_tests" name="prev_tests" value="{{ params.prev_tests }}" placeholder="e.g. 70,80,65" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="sec-title">🛠️ Test Configuration</div>
+                        <div class="field-grid">
+                            <div class="field">
+                                <label class="field-label" for="num_questions">{{ lang_strings.num_questions }}</label>
+                                <input type="number" id="num_questions" name="num_questions" value="{{ params.num_questions if params.num_questions is not none else 5 }}" min="1" max="40" class="form-control">
+                            </div>
+                            <div class="field">
+                                <label class="field-label" for="question_type">{{ lang_strings.question_type }}</label>
+                                <div class="select-wrap">
+                                    <select id="question_type" name="question_type" class="form-control">
+                                        <option value="objective" {% if params.question_type == 'objective' %}selected{% endif %}>{{ lang_strings.objective_type }}</option>
+                                        <option value="subjective" {% if params.question_type == 'subjective' %}selected{% endif %}>{{ lang_strings.subjective_type }}</option>
+                                        <option value="mixed" {% if params.question_type == 'mixed' %}selected{% endif %}>{{ lang_strings.mixed_type }}</option>
+                                        <option value="multiple-options" {% if params.question_type == 'multiple-options' %}selected{% endif %}>{{ lang_strings.multiple_options_type }}</option>
+                                        <option value="section-wise-marking" {% if params.question_type == 'section-wise-marking' %}selected{% endif %}>{{ lang_strings.section_wise_marking_type }}</option>
+                                    </select>
+                                    <span class="select-arrow">▾</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="field-label" for="question_hardness">{{ lang_strings.question_hardness }}</label>
+                            <div class="select-wrap">
+                                <select id="question_hardness" name="question_hardness" class="form-control">
+                                    <option value="basic" {% if params.question_hardness == 'basic' %}selected{% endif %}>{{ lang_strings.basic_hardness }}</option>
+                                    <option value="medium" {% if params.question_hardness == 'medium' %}selected{% endif %}>{{ lang_strings.medium_hardness }}</option>
+                                    <option value="hard" {% if params.question_hardness == 'hard' %}selected{% endif %}>{{ lang_strings.hard_hardness }}</option>
+                                    <option value="scholar" {% if params.question_hardness == 'scholar' %}selected{% endif %}>{{ lang_strings.scholar_hardness }}</option>
+                                    <option value="master" {% if params.question_hardness == 'master' %}selected{% endif %}>{{ lang_strings.master_hardness }}</option>
+                                </select>
+                                <span class="select-arrow">▾</span>
+                            </div>
+                        </div>
+                        <div class="field" style="margin-top: 1.5rem;">
+                            <label class="check-wrap" for="ask_repetitive">
+                                <input type="checkbox" id="ask_repetitive" name="ask_repetitive" value="yes" class="check-input" {% if params.ask_repetitive == 'yes' %}checked{% endif %}>
+                                <div class="check-box">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M20 6L9 17l-5-5"/></svg>
+                                </div>
+                                <span class="check-lbl">{{ lang_strings.ask_repetitive }}</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="custom-prompt" class="hidden">
+                    <div class="form-section">
+                        <div class="sec-title">✍️ Custom Prompt</div>
+                        <div class="field">
+                            <label class="field-label" for="custom_prompt_text">{{ lang_strings.enter_custom_prompt }}</label>
+                            <textarea id="custom_prompt_text" name="custom_prompt" class="form-control" placeholder="e.g. Generate 10 MCQs on Newton's laws for Grade 9 students...">{{ custom_prompt }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="pdf-upload-field" class="hidden">
+                    <div class="form-section">
+                        <div class="sec-title">📄 Upload PDF</div>
+                        <div class="field">
+                            <label class="field-label">{{ lang_strings.upload_test_paper_field }}</label>
+                            <div class="file-zone" id="fileZone">
+                                <div class="file-icon">📤</div>
+                                <div class="file-title">Drop your PDF here or click to browse</div>
+                                <div class="file-sub">Supports searchable PDFs only · Max 10MB</div>
+                                <div class="file-name" id="fileName"></div>
+                                <input type="file" id="test_paper" name="test_paper" accept=".pdf" onchange="updateFileName(this)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+                <div class="form-section">
+                    <div class="sec-title">📊 Evaluation Strategy</div>
+                    <div class="field">
+                        <label class="field-label" for="evaluation_pattern">{{ lang_strings.eval_pattern }}</label>
+                        <div class="select-wrap">
+                            <select id="evaluation_pattern" name="evaluation_pattern" class="form-control">
+                                <option value="positive" {% if evaluation_pattern == 'positive' %}selected{% endif %}>{{ lang_strings.positive_eval_option }}</option>
+                                <option value="negative" {% if evaluation_pattern == 'negative' %}selected{% endif %}>{{ lang_strings.negative_eval_option }}</option>
+                                <option value="basic" {% if evaluation_pattern == 'basic' %}selected{% endif %}>{{ lang_strings.basic_eval_option }}</option>
+                                <option value="medium" {% if evaluation_pattern == 'medium' %}selected{% endif %}>{{ lang_strings.medium_eval_option }}</option>
+                                <option value="hard" {% if evaluation_pattern == 'hard' %}selected{% endif %}>{{ lang_strings.hard_hardness }}</option>
+                                <option value="scholar" {% if evaluation_pattern == 'scholar' %}selected{% endif %}>{{ lang_strings.scholar_eval_option }}</option>
+                                <option value="master" {% if evaluation_pattern == 'master' %}selected{% endif %}>{{ lang_strings.master_eval_option }}</option>
+                            </select>
+                            <span class="select-arrow">▾</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    {{ lang_strings.generate_questions }}
+                </button>
+
+            </form>
+        </div>
+    </main>
+
+    <script>
+        /* ── Theme toggle ── */
+        const html = document.documentElement;
+        const btn  = document.getElementById('themeBtn');
+        if (localStorage.getItem('edubot-theme') === 'light') html.setAttribute('data-theme','light');
+        btn.addEventListener('click', () => {
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('edubot-theme', next);
+        });
+
+        /* ── Generation Method Toggles ── */
+        function toggleGenerationMethod(method) {
+            const defaultDiv   = document.getElementById('default-params');
+            const customDiv    = document.getElementById('custom-prompt');
+            const pdfDiv       = document.getElementById('pdf-upload-field');
+            const defaultInputs = defaultDiv.querySelectorAll('input:not([type="checkbox"]), select');
+            const customPromptInput = document.getElementById('custom_prompt_text');
+            const testPaperInput    = document.getElementById('test_paper');
+
+            [defaultDiv, customDiv, pdfDiv].forEach(d => d.classList.add('hidden'));
+            defaultInputs.forEach(el => el.removeAttribute('required'));
+            customPromptInput.removeAttribute('required');
+            if (testPaperInput) testPaperInput.removeAttribute('required');
+
+            if (method === 'default') {
+                defaultDiv.classList.remove('hidden');
+                defaultInputs.forEach(el => {
+                    if (!['gender','avg_marks','prev_tests'].includes(el.id)) el.setAttribute('required','required');
+                });
+            } else if (method === 'custom_prompt') {
+                customDiv.classList.remove('hidden');
+                customPromptInput.setAttribute('required','required');
+            } else if (method === 'pdf_upload') {
+                pdfDiv.classList.remove('hidden');
+                if (testPaperInput) testPaperInput.setAttribute('required','required');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const initial = "{{ generation_method }}";
+            toggleGenerationMethod(!initial || initial === 'None' ? 'default' : initial);
+        });
+
+        /* ── File Upload Display ── */
+        function updateFileName(input) {
+            const label = document.getElementById('fileName');
+            if (input.files && input.files[0]) {
+                label.textContent = '📄 ' + input.files[0].name;
+                label.style.display = 'inline-block';
+            } else {
+                label.style.display = 'none';
+            }
+        }
+
+        /* ── Drag & Drop Area ── */
+        const zone = document.getElementById('fileZone');
+        if (zone) {
+            zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragging'); });
+            zone.addEventListener('dragleave', () => zone.classList.remove('dragging'));
+            zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('dragging'); });
+        }
+    </script>
+
+</body>
+</html>

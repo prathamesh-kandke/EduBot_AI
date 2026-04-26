@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ lang_strings.test_results }} — EduBotAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ══════════════════════════════════
+           DARK TOKENS
+        ══════════════════════════════════ */
+        :root {
+            --bg:           #020d18;
+            --orb-1:        rgba(0, 190, 210, 0.30);
+            --orb-2:        rgba(0, 80,  210, 0.26);
+            --orb-3:        rgba(0, 230, 165, 0.16);
+            --glass:        rgba(255,255,255,0.055);
+            --glass-md:     rgba(255,255,255,0.09);
+            --glass-hi:     rgba(255,255,255,0.13);
+            --gb:           rgba(255,255,255,0.10);
+            --gb-hover:     rgba(0,212,232,0.35);
+            --text:         #e8f5ff;
+            --text-2:       rgba(232,245,255,0.55);
+            --text-3:       rgba(232,245,255,0.28);
+            --cyan:         #00d4e8;
+            --cyan-soft:    rgba(0,212,232,0.12);
+            --cyan-glow:    rgba(0,212,232,0.22);
+            --green:        #00e8a0;
+            --amber:        #fbbf24;
+            --danger:       #f87171;
+            --nav-bg:       rgba(2,13,24,0.72);
+            --input-bg:     rgba(0,0,0,0.22);
+            --noise-op:     0.038;
+
+            /* Result specific */
+            --ans-bg:           rgba(255,255,255,0.03);
+            --ans-border:       rgba(255,255,255,0.08);
+            --ideal-bg:         rgba(0,232,160,0.06);
+            --ideal-border:     rgba(0,232,160,0.25);
+            --feedback-bg:      rgba(0,212,232,0.06);
+            --feedback-border:  rgba(0,212,232,0.25);
+            --deduct-bg:        rgba(248,113,113,0.06);
+            --deduct-border:    rgba(248,113,113,0.25);
+        }
+
+        /* ══════════════════════════════════
+           LIGHT TOKENS
+        ══════════════════════════════════ */
+        [data-theme="light"] {
+            --bg:           #dff2fc;
+            --orb-1:        rgba(0, 150, 185, 0.22);
+            --orb-2:        rgba(0,  70, 190, 0.14);
+            --orb-3:        rgba(0, 190, 140, 0.16);
+            --glass:        rgba(255,255,255,0.52);
+            --glass-md:     rgba(255,255,255,0.66);
+            --glass-hi:     rgba(255,255,255,0.82);
+            --gb:           rgba(0,140,175,0.16);
+            --gb-hover:     rgba(0,122,155,0.40);
+            --text:         #021824;
+            --text-2:       rgba(2,24,36,0.56);
+            --text-3:       rgba(2,24,36,0.36);
+            --cyan:         #006e8a;
+            --cyan-soft:    rgba(0,110,138,0.10);
+            --cyan-glow:    rgba(0,110,138,0.14);
+            --green:        #008060;
+            --amber:        #b45309;
+            --danger:       #dc2626;
+            --nav-bg:       rgba(215,240,252,0.78);
+            --input-bg:     rgba(255,255,255,0.55);
+            --noise-op:     0.018;
+
+            /* Result specific */
+            --ans-bg:           rgba(255,255,255,0.7);
+            --ans-border:       rgba(0,110,138,0.15);
+            --ideal-bg:         rgba(0,128,96,0.06);
+            --ideal-border:     rgba(0,128,96,0.25);
+            --feedback-bg:      rgba(0,110,138,0.06);
+            --feedback-border:  rgba(0,110,138,0.25);
+            --deduct-bg:        rgba(220,38,38,0.06);
+            --deduct-border:    rgba(220,38,38,0.25);
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Instrument Sans', sans-serif;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; overflow-x: hidden;
+            display: flex; flex-direction: column;
+            transition: background 0.45s, color 0.45s;
+        }
+
+        /* ── Orb background ── */
+        .bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .orb {
+            position: absolute; border-radius: 50%; filter: blur(95px);
+            animation: floatOrb 16s ease-in-out infinite alternate;
+            transition: background 0.45s;
+        }
+        .orb-1 { width: 680px; height: 680px; background: var(--orb-1); top: -220px; left: -160px; }
+        .orb-2 { width: 560px; height: 560px; background: var(--orb-2); bottom: -120px; right: -100px; animation-delay: -6s; }
+        .orb-3 { width: 400px; height: 400px; background: var(--orb-3); top: 45%; left: 38%; animation-delay: -10s; }
+        @keyframes floatOrb {
+            from { transform: translate(0,0) scale(1); }
+            to   { transform: translate(32px,40px) scale(1.09); }
+        }
+
+        .bg-noise {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            opacity: var(--noise-op);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 180px; transition: opacity 0.45s;
+        }
+
+        /* ══════════════════════════════════
+           NAVBAR
+        ══════════════════════════════════ */
+        nav {
+            position: sticky; top: 0; z-index: 999;
+            height: 62px;
+            background: var(--nav-bg);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            border-bottom: 1px solid var(--gb);
+            padding: 0 clamp(1rem,5vw,4rem);
+            display: flex; align-items: center; justify-content: space-between;
+            transition: background 0.45s;
+        }
+
+        .logo {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1.25rem; font-weight: 800; letter-spacing: -0.03em;
+            text-decoration: none; color: var(--text);
+            display: flex; align-items: center; gap: 9px;
+        }
+        .logo-dot {
+            width: 9px; height: 9px; border-radius: 50%;
+            background: var(--cyan); box-shadow: 0 0 10px var(--cyan-glow);
+            animation: pulseDot 2.6s ease-in-out infinite;
+        }
+        @keyframes pulseDot {
+            0%,100%{ transform:scale(1);   box-shadow:0 0 10px var(--cyan-glow); }
+            50%    { transform:scale(1.35); box-shadow:0 0 20px var(--cyan-glow); }
+        }
+        .logo em { color: var(--cyan); font-style: normal; }
+
+        .nav-right { display: flex; align-items: center; gap: 8px; }
+
+        .theme-btn {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: var(--glass); border: 1px solid var(--gb);
+            backdrop-filter: blur(10px); cursor: pointer;
+            display: grid; place-items: center; font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        .theme-btn:hover { background: var(--glass-md); border-color: var(--gb-hover); }
+        .icon-moon { display: block; } .icon-sun { display: none; }
+        [data-theme="light"] .icon-moon { display: none; }
+        [data-theme="light"] .icon-sun  { display: block; }
+
+        /* ══════════════════════════════════
+           MAIN
+        ══════════════════════════════════ */
+        .main {
+            position: relative; z-index: 1;
+            max-width: 900px; margin: 0 auto; width: 100%;
+            padding: 36px 28px 60px;
+        }
+
+        /* ── Score Hero ── */
+        .score-hero {
+            background: var(--glass); border: 1px solid var(--gb);
+            backdrop-filter: blur(34px) saturate(180%);
+            -webkit-backdrop-filter: blur(34px) saturate(180%);
+            border-radius: 28px; padding: 44px 36px; text-align: center;
+            margin-bottom: 36px; position: relative; overflow: hidden;
+            box-shadow: 0 32px 64px -16px rgba(0,0,0,0.3);
+            animation: floatIn 0.7s ease both;
+        }
+        .score-hero::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--cyan), var(--green), transparent);
+        }
+
+        .hero-eyebrow {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--cyan-soft); border: 1px solid var(--gb);
+            padding: 4px 14px; border-radius: 99px;
+            font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
+            text-transform: uppercase; color: var(--cyan); margin-bottom: 0.75rem;
+        }
+        .hero-title {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 800; letter-spacing: -0.04em;
+            margin-bottom: 8px; line-height: 1.1;
+        }
+        .hero-title span {
+            background: linear-gradient(130deg, var(--cyan) 0%, var(--green) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+
+        .practice-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(0,212,232,0.12); border: 1px solid rgba(0,212,232,0.25);
+            color: var(--cyan); border-radius: 100px; padding: 4px 14px;
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        /* Score ring */
+        .score-ring-wrap { display: flex; align-items: center; justify-content: center; gap: 32px; margin: 24px 0; flex-wrap: wrap; }
+        .score-ring { position: relative; width: 140px; height: 140px; }
+        .score-ring svg { width: 140px; height: 140px; transform: rotate(-90deg); }
+        .score-ring .track { fill: none; stroke: var(--gb); stroke-width: 10; }
+        .score-ring .fill  {
+            fill: none; stroke-width: 10; stroke-linecap: round;
+            stroke: url(#scoreGrad);
+            stroke-dasharray: 345; stroke-dashoffset: 345;
+            transition: stroke-dashoffset 1.2s cubic-bezier(0.34,1.4,0.64,1);
+        }
+        .score-center {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .score-num {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 2.2rem; font-weight: 800; letter-spacing: -0.04em;
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            line-height: 1;
+        }
+        .score-denom { font-size: 0.75rem; color: var(--text-2); font-weight: 600; margin-top: 2px; }
+
+        /* Mini stats beside ring */
+        .score-stats { display: flex; flex-direction: column; gap: 14px; }
+        .score-stat { text-align: left; }
+        .score-stat-val { font-family: 'Bricolage Grotesque', sans-serif; font-size: 1.4rem; font-weight: 800; letter-spacing: -0.03em; }
+        .score-stat-lbl { font-size: 0.72rem; color: var(--text-3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 1px; }
+
+        .amber-val  { background: linear-gradient(135deg, var(--amber), #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .green-val  { background: linear-gradient(135deg, var(--green), #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .red-val    { background: linear-gradient(135deg, var(--danger), #e11d48); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .neutral-val{ color: var(--text); }
+
+        /* ── Section header ── */
+        .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; animation: floatIn 0.6s ease 0.15s both; }
+        .section-title { font-family: 'Bricolage Grotesque', sans-serif; font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em; }
+        .section-line { flex: 1; height: 1px; background: var(--gb); }
+        .section-count { font-size: 0.72rem; font-weight: 700; color: var(--text-3); background: var(--glass); border: 1px solid var(--gb); border-radius: 100px; padding: 3px 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* ── Question Result Cards ── */
+        .results-list { display: flex; flex-direction: column; gap: 20px; }
+
+        .res-card {
+            background: var(--glass); border: 1px solid var(--gb);
+            backdrop-filter: blur(26px) saturate(180%); -webkit-backdrop-filter: blur(26px) saturate(180%);
+            border-radius: 22px; overflow: hidden;
+            transition: background 0.4s, border-color 0.4s, transform 0.2s;
+            animation: floatIn 0.5s ease both;
+        }
+        .res-card:hover { transform: translateY(-2px); border-color: var(--gb-hover); }
+
+        /* Score colour left border */
+        .res-card.perfect { border-left: 3px solid var(--green); }
+        .res-card.partial { border-left: 3px solid var(--amber); }
+        .res-card.zero    { border-left: 3px solid var(--danger); }
+
+        .res-header {
+            display: flex; align-items: flex-start; justify-content: space-between;
+            gap: 16px; padding: 22px 24px 16px;
+            border-bottom: 1px solid var(--gb);
+            flex-wrap: wrap;
+        }
+        .res-q-meta { display: flex; align-items: flex-start; gap: 12px; flex: 1; min-width: 0; }
+        .q-num {
+            background: var(--cyan-soft); border: 1px solid rgba(0,212,232,0.25);
+            color: var(--cyan); border-radius: 8px; padding: 4px 10px;
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 0.72rem; font-weight: 800; flex-shrink: 0; margin-top: 2px;
+        }
+        .res-q-text { font-size: 0.95rem; font-weight: 600; line-height: 1.55; color: var(--text); }
+
+        .score-pill {
+            flex-shrink: 0; border-radius: 10px; padding: 6px 14px;
+            font-size: 0.88rem; font-weight: 800; display: flex; align-items: center; gap: 5px;
+            font-family: 'Bricolage Grotesque', sans-serif;
+        }
+        .score-pill.perfect { background: rgba(0,232,160,0.12); color: var(--green); border: 1px solid rgba(0,232,160,0.25); }
+        .score-pill.partial { background: rgba(251,191,36,0.12); color: var(--amber); border: 1px solid rgba(251,191,36,0.25); }
+        .score-pill.zero    { background: rgba(248,113,113,0.12); color: var(--danger); border: 1px solid rgba(248,113,113,0.25); }
+        [data-theme="light"] .score-pill.perfect { color: #059669; }
+        [data-theme="light"] .score-pill.partial { color: #d97706; }
+        [data-theme="light"] .score-pill.zero    { color: #dc2626; }
+
+        .res-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+
+        /* Answer boxes */
+        .answer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .ans-box { border-radius: 14px; padding: 16px; border: 1px solid; }
+        .ans-box.student  { background: var(--ans-bg);    border-color: var(--ans-border); }
+        .ans-box.ideal    { background: var(--ideal-bg);  border-color: var(--ideal-border); }
+
+        .ans-label { font-size: 0.67rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .ans-box.student .ans-label  { color: var(--text-3); }
+        .ans-box.ideal   .ans-label  { color: var(--green); }
+        [data-theme="light"] .ans-box.ideal .ans-label { color: #059669; }
+
+        .ans-text { font-size: 0.88rem; line-height: 1.65; color: var(--text-2); font-weight: 400; }
+
+        /* Feedback box */
+        .feedback-box {
+            background: var(--feedback-bg); border: 1px solid var(--feedback-border);
+            border-radius: 14px; padding: 16px 20px;
+        }
+        .feedback-label { font-size: 0.67rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cyan); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        [data-theme="light"] .feedback-label { color: #006e8a; }
+
+        /* Markdown feedback styles */
+        .markdown-feedback { font-size: 0.88rem; line-height: 1.75; color: var(--text-2); }
+        .markdown-feedback h3 { font-family: 'Bricolage Grotesque', sans-serif; font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 12px 0 6px; }
+        .markdown-feedback p  { margin-bottom: 8px; }
+        .markdown-feedback ul { list-style: disc; margin-left: 20px; margin-bottom: 10px; }
+        .markdown-feedback li { margin-bottom: 4px; }
+        .markdown-feedback strong { font-weight: 700; color: var(--text); }
+        .markdown-feedback code { background: var(--glass-md); border-radius: 6px; padding: 2px 6px; font-size: 0.82rem; border: 1px solid var(--gb); }
+
+        /* Deductions */
+        .deduct-box {
+            background: var(--deduct-bg); border: 1px solid var(--deduct-border);
+            border-radius: 14px; padding: 14px 20px;
+        }
+        .deduct-label { font-size: 0.67rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--danger); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        [data-theme="light"] .deduct-label { color: #dc2626; }
+        .deduct-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+        .deduct-item { display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; color: var(--text-2); }
+        .deduct-desc { display: flex; align-items: center; gap: 8px; }
+        .deduct-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--danger); flex-shrink: 0; }
+        .deduct-marks { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; color: var(--danger); font-size: 0.85rem; white-space: nowrap; }
+
+        /* ── Actions ── */
+        .actions {
+            display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+            margin-top: 40px; animation: floatIn 0.6s ease 0.3s both;
+        }
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 13px 28px; border-radius: 14px;
+            font-size: 0.95rem; font-weight: 700; text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s, filter 0.2s, background 0.2s;
+            cursor: pointer; border: none; font-family: 'Bricolage Grotesque', sans-serif;
+            letter-spacing: -0.01em;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-secondary { background: var(--glass); border: 1px solid var(--gb); color: var(--text); backdrop-filter: blur(10px); }
+        .btn-secondary:hover { background: var(--glass-md); border-color: var(--gb-hover); }
+        .btn-primary { background: linear-gradient(135deg, #00c4d8 0%, #00e8a0 100%); color: #021824; box-shadow: 0 4px 16px rgba(0,212,232,0.25); }
+        .btn-primary:hover { box-shadow: 0 8px 24px rgba(0,212,232,0.4); filter: brightness(1.07); }
+
+        @keyframes floatIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 600px) {
+            .main { padding: 24px 14px 40px; }
+            .score-hero { padding: 32px 20px; }
+            .answer-grid { grid-template-columns: 1fr; }
+            .res-header { flex-direction: column; }
+            .actions { flex-direction: column; align-items: stretch; }
+            .btn { justify-content: center; }
+            .nav-btn span { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-mesh">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="bg-noise"></div>
+
+    <nav>
+        <a href="/" class="logo">
+            <div class="logo-dot"></div>
+            EduBot<em>AI</em>
+        </a>
+        <div class="nav-right">
+            <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">
+                <span class="icon-moon">🌙</span>
+                <span class="icon-sun">☀️</span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="main">
+
+        <div class="score-hero">
+            <div class="hero-eyebrow">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Student Portal
+            </div>
+            <div class="hero-title"><span>{{ lang_strings.test_results }}</span></div>
+
+            {% if is_practice %}
+            <div style="display:flex;justify-content:center;margin-bottom:4px;">
+                <span class="practice-badge">🎯 Self-Practice Mode</span>
+            </div>
+            {% endif %}
+
+            <div class="score-ring-wrap">
+                <div class="score-ring">
+                    <svg viewBox="0 0 120 120">
+                        <defs>
+                            <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#00d4e8"/>
+                                <stop offset="100%" style="stop-color:#00e8a0"/>
+                            </linearGradient>
+                        </defs>
+                        <circle class="track" cx="60" cy="60" r="55"/>
+                        <circle class="fill" cx="60" cy="60" r="55" id="scoreRing"/>
+                    </svg>
+                    <div class="score-center">
+                        <div class="score-num">{{ overall_score }}</div>
+                        <div class="score-denom">/ {{ total_possible_score }}</div>
+                    </div>
+                </div>
+
+                <div class="score-stats">
+                    {% set pct = ((overall_score / total_possible_score) * 100) | round(1) if total_possible_score > 0 else 0 %}
+                    <div class="score-stat">
+                        <div class="score-stat-val amber-val">{{ pct }}%</div>
+                        <div class="score-stat-lbl">Score Percentage</div>
+                    </div>
+                    {% set correct = evaluation_results | selectattr('score', 'equalto', evaluation_results[0].possible if evaluation_results else 0) | list | length if evaluation_results else 0 %}
+                    <div class="score-stat">
+                        <div class="score-stat-val green-val">{{ evaluation_results | selectattr('score') | list | length if evaluation_results else 0 }}</div>
+                        <div class="score-stat-lbl">Questions Scored</div>
+                    </div>
+                    <div class="score-stat">
+                        <div class="score-stat-val neutral-val">{{ evaluation_results | length if evaluation_results else 0 }}</div>
+                        <div class="score-stat-lbl">Total Questions</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-header">
+            <div class="section-title">Detailed Breakdown</div>
+            <div class="section-line"></div>
+            {% if evaluation_results %}
+            <div class="section-count">{{ evaluation_results | length }} questions</div>
+            {% endif %}
+        </div>
+
+        <div class="results-list">
+            {% for res in evaluation_results %}
+
+            {% if res.score == res.possible %}
+                {% set card_class = 'perfect' %}
+                {% set pill_class = 'perfect' %}
+                {% set pill_icon = '✅' %}
+            {% elif res.score > 0 %}
+                {% set card_class = 'partial' %}
+                {% set pill_class = 'partial' %}
+                {% set pill_icon = '⚡' %}
+            {% else %}
+                {% set card_class = 'zero' %}
+                {% set pill_class = 'zero' %}
+                {% set pill_icon = '❌' %}
+            {% endif %}
+
+            <div class="res-card {{ card_class }}" style="animation-delay: {{ loop.index0 * 0.07 }}s">
+
+                <div class="res-header">
+                    <div class="res-q-meta">
+                        <span class="q-num">Q{{ loop.index }}</span>
+                        <span class="res-q-text">{{ res.question_text }}</span>
+                    </div>
+                    <div class="score-pill {{ pill_class }}">
+                        {{ pill_icon }} {{ res.score }} / {{ res.possible }}
+                    </div>
+                </div>
+
+                <div class="res-body">
+
+                    <div class="answer-grid">
+                        <div class="ans-box student">
+                            <div class="ans-label">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                {{ lang_strings.your_answer_label }}
+                            </div>
+                            <div class="ans-text">{{ res.student_answer if res.student_answer else "No answer provided" }}</div>
+                        </div>
+                        <div class="ans-box ideal">
+                            <div class="ans-label">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                                {{ lang_strings.ideal_answer_label }}
+                            </div>
+                            <div class="ans-text">{{ res.ideal_answer }}</div>
+                        </div>
+                    </div>
+
+                    <div class="feedback-box">
+                        <div class="feedback-label">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                            AI {{ lang_strings.feedback_label }}
+                        </div>
+                        <div class="markdown-feedback">{{ res.feedback }}</div>
+                    </div>
+
+                    {% if res.deductions and res.deductions | length > 0 %}
+                    <div class="deduct-box">
+                        <div class="deduct-label">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+                            {{ lang_strings.deductions_label }}
+                        </div>
+                        <ul class="deduct-list">
+                            {% for d in res.deductions %}
+                            <li class="deduct-item">
+                                <div class="deduct-desc">
+                                    <span class="deduct-dot"></span>
+                                    <span>{{ d.description }}</span>
+                                </div>
+                                <span class="deduct-marks">-{{ d.marks_deducted }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="actions">
+            <a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                Back to Dashboard
+            </a>
+            {% if is_practice %}
+            <a href="{{ url_for('practice_mode') }}" class="btn btn-primary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                Start Another Practice Test
+            </a>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <script>
+        /* Theme toggle */
+        const html = document.documentElement;
+        const themeBtn = document.getElementById('themeBtn');
+        if (localStorage.getItem('edubot-theme') === 'light') html.setAttribute('data-theme', 'light');
+        themeBtn.addEventListener('click', () => {
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('edubot-theme', next);
+        });
+
+        /* Animate score ring */
+        document.addEventListener('DOMContentLoaded', () => {
+            const overall = {{ overall_score }};
+            const total   = {{ total_possible_score }};
+            const ring    = document.getElementById('scoreRing');
+            if (ring && total > 0) {
+                const circumference = 2 * Math.PI * 55; // r=55
+                const offset = circumference - (overall / total) * circumference;
+                ring.style.strokeDasharray  = circumference;
+                ring.style.strokeDashoffset = circumference;
+                requestAnimationFrame(() => {
+                    setTimeout(() => { ring.style.strokeDashoffset = offset; }, 100);
+                });
+            }
+
+            /* Render markdown feedback */
+            document.querySelectorAll('.markdown-feedback').forEach(el => {
+                const raw = el.textContent || el.innerText;
+                if (raw.trim()) el.innerHTML = marked.parse(raw.trim());
+            });
+        });
+    </script>
+
+</body>
+</html>

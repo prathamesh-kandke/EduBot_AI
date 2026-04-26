@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang }}" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ lang_strings.teacher_analytics }} — EduBotAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ════════════════════════════════════
+           DARK THEME TOKENS (Cyan/Green for Teachers)
+        ════════════════════════════════════ */
+        :root {
+            --bg:           #020d18;
+            --orb-1:        rgba(0, 190, 210, 0.30);
+            --orb-2:        rgba(0, 80,  210, 0.26);
+            --orb-3:        rgba(0, 230, 165, 0.16);
+            --glass:        rgba(255,255,255,0.055);
+            --glass-md:     rgba(255,255,255,0.09);
+            --glass-hi:     rgba(255,255,255,0.13);
+            --gb:           rgba(255,255,255,0.10);
+            --gb-hover:     rgba(0,212,232,0.35);
+            --text:         #e8f5ff;
+            --text-2:       rgba(232,245,255,0.55);
+            --text-3:       rgba(232,245,255,0.28);
+            --cyan:         #00d4e8;
+            --cyan-soft:    rgba(0,212,232,0.15);
+            --cyan-glow:    rgba(0,212,232,0.22);
+            --green:        #00e8a0;
+            --nav-bg:       rgba(2,13,24,0.72);
+            --noise-op:     0.038;
+            --danger:       #f87171;
+            --danger-bg:    rgba(248,113,113,0.08);
+            --danger-border:rgba(248,113,113,0.35);
+        }
+
+        /* ════════════════════════════════════
+           LIGHT THEME TOKENS
+        ════════════════════════════════════ */
+        [data-theme="light"] {
+            --bg:           #dff2fc;
+            --orb-1:        rgba(0, 150, 185, 0.22);
+            --orb-2:        rgba(0,  70, 190, 0.14);
+            --orb-3:        rgba(0, 190, 140, 0.16);
+            --glass:        rgba(255,255,255,0.52);
+            --glass-md:     rgba(255,255,255,0.66);
+            --glass-hi:     rgba(255,255,255,0.82);
+            --gb:           rgba(0,140,175,0.16);
+            --gb-hover:     rgba(0,122,155,0.40);
+            --text:         #021824;
+            --text-2:       rgba(2,24,36,0.56);
+            --text-3:       rgba(2,24,36,0.36);
+            --cyan:         #006e8a;
+            --cyan-soft:    rgba(0,110,138,0.10);
+            --cyan-glow:    rgba(0,110,138,0.14);
+            --green:        #008060;
+            --nav-bg:       rgba(215,240,252,0.78);
+            --noise-op:     0.018;
+            --danger:       #dc2626;
+            --danger-bg:    rgba(220,38,38,0.07);
+            --danger-border:rgba(220,38,38,0.28);
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Instrument Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.45s ease, color 0.45s ease;
+        }
+
+        /* ── Animated orb background ── */
+        .bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(95px);
+            animation: floatOrb 16s ease-in-out infinite alternate;
+            transition: background 0.45s;
+        }
+        .orb-1 { width: 720px; height: 720px; background: var(--orb-1); top: -240px; left: -170px; animation-delay: 0s; }
+        .orb-2 { width: 620px; height: 620px; background: var(--orb-2); bottom: -120px; right: -120px; animation-delay: -6s; }
+        .orb-3 { width: 460px; height: 460px; background: var(--orb-3); top: 38%; left: 34%; animation-delay: -10s; }
+        @keyframes floatOrb {
+            from { transform: translate(0, 0)   scale(1);    }
+            to   { transform: translate(34px, 42px) scale(1.09); }
+        }
+
+        .bg-noise {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            opacity: var(--noise-op);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 180px 180px;
+        }
+
+        /* ════════════════════════════════════
+           NAVBAR
+        ════════════════════════════════════ */
+        nav {
+            position: sticky; top: 0; z-index: 999;
+            height: 64px;
+            background: var(--nav-bg);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            border-bottom: 1px solid var(--gb);
+            padding: 0 clamp(1rem, 5vw, 4rem);
+            display: flex; align-items: center; justify-content: space-between;
+            transition: background 0.45s;
+        }
+
+        .logo {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1.32rem; font-weight: 800;
+            letter-spacing: -0.035em;
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none; color: var(--text);
+        }
+        .logo-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: var(--cyan);
+            box-shadow: 0 0 10px var(--cyan-glow);
+            animation: pulseDot 2.6s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+        @keyframes pulseDot {
+            0%, 100% { transform: scale(1);   box-shadow: 0 0 10px var(--cyan-glow); }
+            50%       { transform: scale(1.35); box-shadow: 0 0 20px var(--cyan-glow); }
+        }
+        .logo-text em { color: var(--cyan); font-style: normal; }
+
+        .nav-right { display: flex; align-items: center; gap: 8px; }
+
+        .nav-btn {
+            font-family: 'Instrument Sans', sans-serif;
+            font-size: 0.8rem; font-weight: 600;
+            text-decoration: none;
+            padding: 7px 14px; border-radius: 10px;
+            border: 1px solid var(--gb); background: var(--glass);
+            backdrop-filter: blur(12px); color: var(--text-2);
+            transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .nav-btn:hover { color: var(--text); border-color: var(--gb-hover); background: var(--glass-md); }
+        .nav-btn.danger { color: var(--danger); border-color: var(--danger-bg); background: var(--danger-bg); }
+        .nav-btn.danger:hover { background: rgba(248,113,113,0.18); border-color: var(--danger); }
+
+        .theme-btn {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: var(--glass); border: 1px solid var(--gb);
+            backdrop-filter: blur(12px);
+            cursor: pointer; display: grid; place-items: center;
+            font-size: 1rem; transition: all 0.2s;
+        }
+        .theme-btn:hover { background: var(--glass-md); border-color: var(--gb-hover); }
+        .icon-moon { display: block; } .icon-sun { display: none; }
+        [data-theme="light"] .icon-moon { display: none; }
+        [data-theme="light"] .icon-sun  { display: block; }
+
+        /* ════════════════════════════════════
+           PAGE CONTENT
+        ════════════════════════════════════ */
+        .page-wrap {
+            position: relative; z-index: 1;
+            max-width: 1100px; margin: 0 auto;
+            padding: clamp(2rem, 5vw, 3.5rem) clamp(1rem, 5vw, 2rem);
+            animation: fadeUp 0.55s ease both;
+        }
+
+        /* ── Page header ── */
+        .page-header {
+            display: flex; align-items: flex-end; justify-content: space-between;
+            flex-wrap: wrap; gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .page-eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--glass); border: 1px solid var(--gb);
+            padding: 5px 14px; border-radius: 99px;
+            font-size: 0.68rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--cyan); margin-bottom: 0.75rem;
+        }
+        .eye-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--cyan); animation: pulseDot 2s ease-in-out infinite;
+        }
+
+        .page-title {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            font-weight: 800; letter-spacing: -0.04em;
+            line-height: 1.1;
+        }
+        .page-title span {
+            background: linear-gradient(130deg, #00d4e8 0%, #00e8a0 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        /* Top Action Buttons */
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: linear-gradient(135deg, var(--cyan) 0%, var(--green) 100%);
+            color: #021824; border: none;
+            padding: 9px 18px; border-radius: 12px;
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 0.9rem; font-weight: 800; text-decoration: none;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 16px rgba(0,212,232,0.25);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,212,232,0.35); }
+
+        .btn-secondary {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--glass); border: 1px solid var(--gb);
+            color: var(--text); padding: 9px 18px; border-radius: 12px;
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 0.9rem; font-weight: 700; text-decoration: none;
+            backdrop-filter: blur(12px); transition: all 0.2s;
+        }
+        .btn-secondary:hover { background: var(--glass-md); border-color: var(--gb-hover); transform: translateY(-2px); }
+
+        /* ════════════════════════════════════
+           TABLE CARD
+        ════════════════════════════════════ */
+        .table-card {
+            background: var(--glass); border: 1px solid var(--gb);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border-radius: 20px; overflow: hidden;
+            position: relative;
+        }
+        /* Cyan top accent */
+        .table-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent 5%, rgba(0,212,232,0.65) 50%, transparent 95%);
+            z-index: 2;
+        }
+        .table-card::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: rgba(0,0,0,0.18); border-bottom: 1px solid var(--gb); }
+        [data-theme="light"] thead { background: rgba(0,0,0,0.04); }
+
+        thead th {
+            font-size: 0.65rem; font-weight: 700;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--text-3); padding: 14px 20px; text-align: left;
+        }
+        thead th.right-align { text-align: right; }
+
+        tbody tr { border-bottom: 1px solid var(--gb); transition: background 0.18s; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: var(--glass-md); }
+
+        td { padding: 16px 20px; font-size: 0.88rem; vertical-align: middle; }
+        td.right-align { text-align: right; }
+
+        .test-id {
+            font-family: 'Courier New', monospace; font-size: 0.75rem; color: var(--text-2);
+            background: var(--glass-md); border: 1px solid var(--gb);
+            padding: 3px 8px; border-radius: 6px; display: inline-block;
+        }
+        .date-text { color: var(--text); font-weight: 500; }
+
+        /* Badges */
+        .badge {
+            display: inline-flex; align-items: center; justify-content: center;
+            height: 26px; padding: 0 12px; border-radius: 8px;
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 0.05em; text-transform: uppercase;
+            background: var(--cyan-soft); color: var(--cyan);
+            border: 1px solid rgba(0,212,232,0.3);
+        }
+
+        /* Row Actions */
+        .row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+
+        .action-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 14px; border-radius: 8px;
+            font-family: 'Instrument Sans', sans-serif;
+            font-size: 0.78rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; text-decoration: none;
+        }
+        .action-view {
+            background: var(--cyan-soft); color: var(--cyan); border: 1px solid rgba(0,212,232,0.3);
+        }
+        .action-view:hover { background: rgba(0,212,232,0.22); transform: translateY(-2px); }
+
+        .action-delete {
+            background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border);
+        }
+        .action-delete:hover { background: rgba(248,113,113,0.18); transform: translateY(-2px); border-color: var(--danger); }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center; padding: 4rem 2rem; color: var(--text-3);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .empty-icon { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.5; }
+        .empty-title { font-family: 'Bricolage Grotesque', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+        .empty-sub { font-size: 0.9rem; margin-bottom: 24px; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(22px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 700px) {
+            .page-header { flex-direction: column; align-items: flex-start; }
+            thead th:nth-child(2), td:nth-child(2) { display: none; } /* Hide Date on small mobile */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-mesh">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="bg-noise"></div>
+
+    <nav>
+        <a href="/" class="logo">
+            <div class="logo-dot"></div>
+            <span class="logo-text">EduBot<em>AI</em></span>
+        </a>
+        <div class="nav-right">
+            <div class="nav-btn" style="pointer-events: none;">
+                <span>👤</span><span>{{ username }}</span>
+            </div>
+            <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">
+                <span class="icon-moon">🌙</span>
+                <span class="icon-sun">☀️</span>
+            </button>
+            <a href="/logout" class="nav-btn danger">
+                <span>⏻</span><span>Logout</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="page-wrap">
+
+        <div class="page-header">
+            <div>
+                <div class="page-eyebrow"><span class="eye-dot"></span> 👨‍🏫 Teacher Portal</div>
+                <h1 class="page-title">{{ lang_strings.past_tests }} <span>Overview</span></h1>
+            </div>
+            <div class="header-actions">
+                <a href="{{ url_for('question_bank') }}" class="btn-secondary">
+                    <span>📚</span> {{ lang_strings.question_bank }}
+                </a>
+                <a href="{{ url_for('teacher_page') }}" class="btn-primary">
+                    <span>✨</span> Create New Test
+                </a>
+            </div>
+        </div>
+
+        <div class="table-card">
+            {% if tests %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test ID</th>
+                        <th>{{ lang_strings.test_date }}</th>
+                        <th>{{ lang_strings.generation_type }}</th>
+                        <th class="right-align">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test in tests %}
+                    <tr>
+                        <td><span class="test-id">#{{ test.id }}</span></td>
+                        <td><span class="date-text">📅 {{ test.created_at.strftime('%Y-%m-%d') }} · {{ test.created_at.strftime('%H:%M') }}</span></td>
+                        <td>
+                            <span class="badge">
+                                {{ test.generation_method }}
+                            </span>
+                        </td>
+                        <td class="right-align">
+                            <div class="row-actions">
+                                <a href="{{ url_for('test_analytics_page', test_id=test.id) }}" class="action-btn action-view">
+                                    <span>📊</span> {{ lang_strings.view_analytics }}
+                                </a>
+                                <form action="{{ url_for('delete_test', test_id=test.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this test?\n\nAll student submissions and grades for this test will be permanently lost!');" style="margin: 0; padding: 0;">
+                                    <button type="submit" class="action-btn action-delete">
+                                        <span>✕</span> Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📋</div>
+                <div class="empty-title">{{ lang_strings.no_tests_yet }}</div>
+                <div class="empty-sub">Create your first test and share it with your students.</div>
+                <a href="{{ url_for('teacher_page') }}" class="btn-primary">
+                    <span>✨</span> Create First Test
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <script>
+        const html = document.documentElement;
+        const btn  = document.getElementById('themeBtn');
+        if (localStorage.getItem('edubot-theme') === 'light') html.setAttribute('data-theme', 'light');
+        btn.addEventListener('click', () => {
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('edubot-theme', next);
+        });
+    </script>
+
+</body>
+</html>

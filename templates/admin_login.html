@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Secure Access — EduBotAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:           #020d18;
+            --orb-1:        rgba(245, 158, 11, 0.18);
+            --orb-2:        rgba(0,  80, 210, 0.22);
+            --orb-3:        rgba(245, 120, 11, 0.10);
+            --glass:        rgba(255,255,255,0.055);
+            --glass-md:     rgba(255,255,255,0.09);
+            --glass-hi:     rgba(255,255,255,0.13);
+            --gb:           rgba(255,255,255,0.10);
+            --gb-hover:     rgba(245,158,11,0.40);
+            --text:         #e8f5ff;
+            --text-2:       rgba(232,245,255,0.55);
+            --text-3:       rgba(232,245,255,0.28);
+            --amber:        #f59e0b;
+            --amber-soft:   rgba(245,158,11,0.14);
+            --amber-glow:   rgba(245,158,11,0.25);
+            --cyan:         #00d4e8;
+            --green:        #00e8a0;
+            --nav-bg:       rgba(2,13,24,0.72);
+            --noise-op:     0.038;
+            --danger:       #f87171;
+            --danger-bg:    rgba(248,113,113,0.08);
+            --danger-border:rgba(248,113,113,0.35);
+        }
+
+        [data-theme="light"] {
+            --bg:           #fdf6e8;
+            --orb-1:        rgba(245, 158, 11, 0.18);
+            --orb-2:        rgba(0,   70, 190, 0.10);
+            --orb-3:        rgba(245, 120,  11, 0.10);
+            --glass:        rgba(255,255,255,0.55);
+            --glass-md:     rgba(255,255,255,0.70);
+            --glass-hi:     rgba(255,255,255,0.85);
+            --gb:           rgba(180,130,0,0.14);
+            --gb-hover:     rgba(180,120,0,0.38);
+            --text:         #1a0e00;
+            --text-2:       rgba(26,14,0,0.55);
+            --text-3:       rgba(26,14,0,0.35);
+            --amber:        #b45309;
+            --amber-soft:   rgba(180,83,9,0.10);
+            --amber-glow:   rgba(180,83,9,0.18);
+            --cyan:         #006e8a;
+            --green:        #008060;
+            --nav-bg:       rgba(253,246,232,0.80);
+            --noise-op:     0.016;
+            --danger:       #dc2626;
+            --danger-bg:    rgba(220,38,38,0.07);
+            --danger-border:rgba(220,38,38,0.28);
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Instrument Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.45s ease, color 0.45s ease;
+        }
+
+        /* ── Background orbs ── */
+        .bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(95px);
+            animation: floatOrb 16s ease-in-out infinite alternate;
+            transition: background 0.45s;
+        }
+        .orb-1 { width: 680px; height: 680px; background: var(--orb-1); top: -220px; right: -160px; animation-delay: 0s; }
+        .orb-2 { width: 580px; height: 580px; background: var(--orb-2); bottom: -120px; left: -120px; animation-delay: -7s; }
+        .orb-3 { width: 400px; height: 400px; background: var(--orb-3); top: 40%; left: 40%; animation-delay: -12s; }
+        @keyframes floatOrb {
+            from { transform: translate(0,0) scale(1); }
+            to   { transform: translate(30px,38px) scale(1.08); }
+        }
+
+        .bg-noise {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            opacity: var(--noise-op);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 180px 180px;
+        }
+
+        /* ════════════════════════════════════
+           NAVBAR
+        ════════════════════════════════════ */
+        nav {
+            position: sticky; top: 0; z-index: 999;
+            height: 64px;
+            background: var(--nav-bg);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            border-bottom: 1px solid var(--gb);
+            padding: 0 clamp(1rem, 5vw, 4rem);
+            display: flex; align-items: center; justify-content: space-between;
+            transition: background 0.45s;
+        }
+        .logo {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1.32rem; font-weight: 800;
+            letter-spacing: -0.035em;
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none; color: var(--text);
+        }
+        .logo-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: var(--amber);
+            box-shadow: 0 0 10px var(--amber-glow);
+            animation: pulseDot 2.6s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+        @keyframes pulseDot {
+            0%,100% { transform: scale(1);   box-shadow: 0 0 10px var(--amber-glow); }
+            50%      { transform: scale(1.35); box-shadow: 0 0 20px var(--amber-glow); }
+        }
+        .logo-text em { color: var(--amber); font-style: normal; }
+
+        .nav-right { display: flex; align-items: center; gap: 8px; }
+        .nav-btn {
+            font-family: 'Instrument Sans', sans-serif;
+            font-size: 0.8rem; font-weight: 600;
+            text-decoration: none;
+            padding: 7px 14px; border-radius: 10px;
+            border: 1px solid var(--gb); background: var(--glass);
+            backdrop-filter: blur(12px); color: var(--text-2);
+            transition: all 0.2s;
+        }
+        .nav-btn:hover { color: var(--text); border-color: var(--gb-hover); background: var(--glass-md); }
+
+        .theme-btn {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: var(--glass); border: 1px solid var(--gb);
+            backdrop-filter: blur(12px);
+            cursor: pointer; display: grid; place-items: center;
+            font-size: 1rem; transition: all 0.2s;
+        }
+        .theme-btn:hover { background: var(--glass-md); border-color: var(--gb-hover); }
+        .icon-moon { display: block; } .icon-sun { display: none; }
+        [data-theme="light"] .icon-moon { display: none; }
+        [data-theme="light"] .icon-sun  { display: block; }
+
+        /* ════════════════════════════════════
+           PAGE WRAP
+        ════════════════════════════════════ */
+        .page-wrap {
+            position: relative; z-index: 1;
+            min-height: calc(100vh - 64px);
+            display: flex; align-items: center; justify-content: center;
+            padding: 3rem clamp(1rem, 5vw, 2rem);
+        }
+
+        /* ════════════════════════════════════
+           LOGIN CARD
+        ════════════════════════════════════ */
+        .login-card {
+            width: 100%; max-width: 420px;
+            background: var(--glass);
+            border: 1px solid var(--gb);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border-radius: 24px;
+            padding: clamp(2rem, 5vw, 2.75rem);
+            position: relative; overflow: hidden;
+            box-shadow: 0 32px 64px rgba(0,0,0,0.28);
+            animation: fadeUp 0.55s ease both;
+        }
+        /* Amber top shimmer for admin */
+        .login-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent 5%, rgba(245,158,11,0.7) 50%, transparent 95%);
+            pointer-events: none;
+        }
+        .login-card::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(145deg, rgba(255,255,255,0.055) 0%, transparent 55%);
+            border-radius: inherit; pointer-events: none;
+        }
+
+        /* ── Card header ── */
+        .card-header {
+            text-align: center; margin-bottom: 2rem;
+            position: relative; z-index: 1;
+        }
+
+        /* Shield icon with amber glow ring */
+        .shield-wrap {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 72px; height: 72px; border-radius: 20px;
+            background: var(--amber-soft);
+            border: 1px solid rgba(245,158,11,0.30);
+            box-shadow: 0 0 28px var(--amber-glow), inset 0 0 18px rgba(245,158,11,0.06);
+            font-size: 2.2rem; margin-bottom: 1rem;
+            transition: box-shadow 0.45s;
+        }
+
+        .card-title {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1.7rem; font-weight: 800;
+            letter-spacing: -0.035em; margin-bottom: 0.3rem;
+            background: linear-gradient(130deg, var(--amber) 0%, #fbbf24 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-sub { color: var(--text-2); font-size: 0.88rem; }
+
+        /* Restricted badge */
+        .restricted-tag {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--amber-soft);
+            border: 1px solid rgba(245,158,11,0.25);
+            color: var(--amber);
+            font-size: 0.65rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            padding: 4px 12px; border-radius: 99px;
+            margin-top: 0.7rem;
+        }
+        .restricted-tag::before { content: '●'; font-size: 0.45rem; }
+
+        /* ── Flash messages ── */
+        .flash-msg {
+            background: var(--danger-bg);
+            border: 1px solid var(--danger-border);
+            color: var(--danger);
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem; font-weight: 500;
+            position: relative; z-index: 1;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .flash-msg::before { content: '⚠️'; font-size: 1rem; flex-shrink: 0; }
+
+        /* ── Form fields ── */
+        .form-group { margin-bottom: 1.2rem; position: relative; z-index: 1; }
+        .form-label {
+            display: block;
+            font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 0.09em; text-transform: uppercase;
+            color: var(--text-3); margin-bottom: 0.5rem;
+        }
+        .form-input {
+            width: 100%;
+            background: var(--glass-md);
+            border: 1px solid var(--gb);
+            color: var(--text);
+            padding: 0.875rem 1rem;
+            border-radius: 12px;
+            font-family: 'Instrument Sans', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+        .form-input:focus {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px var(--amber-glow);
+            background: var(--glass-hi);
+        }
+        .form-input::placeholder { color: var(--text-3); }
+
+        /* ── Submit button ── */
+        .btn-submit {
+            width: 100%; margin-top: 0.75rem;
+            background: linear-gradient(135deg, var(--amber) 0%, #fbbf24 100%);
+            color: #1a0800;
+            border: none;
+            padding: 0.95rem 1rem;
+            border-radius: 12px;
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1rem; font-weight: 800;
+            cursor: pointer;
+            position: relative; z-index: 1;
+            letter-spacing: -0.01em;
+            transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px var(--amber-glow);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-submit:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px var(--amber-glow);
+        }
+        .btn-submit:active { transform: translateY(0); }
+
+        /* ── Back link ── */
+        .back-wrap {
+            text-align: center; margin-top: 1.75rem;
+            position: relative; z-index: 1;
+        }
+        .back-link {
+            color: var(--text-3); font-size: 0.82rem; font-weight: 500;
+            text-decoration: none; transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--text-2); }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(22px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 480px) {
+            .login-card { border-radius: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-mesh">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="bg-noise"></div>
+
+    <!-- ════════════════ NAVBAR ════════════════ -->
+    <nav>
+        <a href="/" class="logo">
+            <div class="logo-dot"></div>
+            <span class="logo-text">EduBot<em>AI</em></span>
+        </a>
+        <div class="nav-right">
+            <a href="/" class="nav-btn">← Public Home</a>
+            <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">
+                <span class="icon-moon">🌙</span>
+                <span class="icon-sun">☀️</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ════════════════ PAGE ════════════════ -->
+    <div class="page-wrap">
+        <div class="login-card">
+
+            <!-- Header -->
+            <div class="card-header">
+                <div class="shield-wrap">🛡️</div>
+                <h2 class="card-title">Admin Access</h2>
+                <p class="card-sub">Restricted System Gateway</p>
+                <div class="restricted-tag">Authorised Personnel Only</div>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-msg">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Form -->
+            <form method="POST" action="/admin_login">
+                <div class="form-group">
+                    <label class="form-label">Admin ID</label>
+                    <input type="text" name="username" placeholder="Enter Admin ID" required class="form-input" autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Passcode</label>
+                    <input type="password" name="password" placeholder="••••••••" required class="form-input" autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn-submit">🔐 Authenticate System</button>
+            </form>
+
+            <div class="back-wrap">
+                <a href="/" class="back-link">← Return to Public Home</a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const html = document.documentElement;
+        const btn  = document.getElementById('themeBtn');
+        if (localStorage.getItem('edubot-theme') === 'light') html.setAttribute('data-theme', 'light');
+        btn.addEventListener('click', () => {
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('edubot-theme', next);
+        });
+    </script>
+</body>
+</html>

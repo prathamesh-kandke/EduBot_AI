@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — EduBotAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ════════════════════════════════════
+           DARK THEME TOKENS (Amber = Admin)
+        ════════════════════════════════════ */
+        :root {
+            --bg:           #020d18;
+            --orb-1:        rgba(245, 158, 11, 0.18);
+            --orb-2:        rgba(0,  80, 210, 0.22);
+            --orb-3:        rgba(245, 120, 11, 0.10);
+            --glass:        rgba(255,255,255,0.055);
+            --glass-md:     rgba(255,255,255,0.09);
+            --glass-hi:     rgba(255,255,255,0.13);
+            --gb:           rgba(255,255,255,0.10);
+            --gb-hover:     rgba(245,158,11,0.40);
+            --text:         #e8f5ff;
+            --text-2:       rgba(232,245,255,0.55);
+            --text-3:       rgba(232,245,255,0.28);
+            --amber:        #f59e0b;
+            --amber-soft:   rgba(245,158,11,0.14);
+            --amber-glow:   rgba(245,158,11,0.25);
+            --cyan:         #00d4e8;
+            --green:        #00e8a0;
+            --nav-bg:       rgba(2,13,24,0.72);
+            --select-bg:    #0a1a28;
+            --noise-op:     0.038;
+            --danger:       #f87171;
+            --danger-soft:  rgba(248,113,113,0.12);
+        }
+
+        /* ════════════════════════════════════
+           LIGHT THEME TOKENS
+        ════════════════════════════════════ */
+        [data-theme="light"] {
+            --bg:           #fdf6e8;
+            --orb-1:        rgba(245, 158, 11, 0.18);
+            --orb-2:        rgba(0,   70, 190, 0.10);
+            --orb-3:        rgba(245, 120, 11, 0.10);
+            --glass:        rgba(255,255,255,0.55);
+            --glass-md:     rgba(255,255,255,0.70);
+            --glass-hi:     rgba(255,255,255,0.85);
+            --gb:           rgba(180,130,0,0.14);
+            --gb-hover:     rgba(180,120,0,0.38);
+            --text:         #1a0e00;
+            --text-2:       rgba(26,14,0,0.55);
+            --text-3:       rgba(26,14,0,0.35);
+            --amber:        #b45309;
+            --amber-soft:   rgba(180,83,9,0.10);
+            --amber-glow:   rgba(180,83,9,0.18);
+            --cyan:         #006e8a;
+            --green:        #008060;
+            --nav-bg:       rgba(253,246,232,0.80);
+            --select-bg:    #fff;
+            --noise-op:     0.016;
+            --danger:       #dc2626;
+            --danger-soft:  rgba(220,38,38,0.08);
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Instrument Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.45s ease, color 0.45s ease;
+        }
+
+        /* ── Animated orb background ── */
+        .bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(95px);
+            animation: floatOrb 16s ease-in-out infinite alternate;
+            transition: background 0.45s;
+        }
+        .orb-1 { width: 680px; height: 680px; background: var(--orb-1); top: -220px; right: -160px; animation-delay: 0s; }
+        .orb-2 { width: 580px; height: 580px; background: var(--orb-2); bottom: -120px; left: -120px; animation-delay: -7s; }
+        .orb-3 { width: 400px; height: 400px; background: var(--orb-3); top: 40%; left: 40%; animation-delay: -12s; }
+        @keyframes floatOrb {
+            from { transform: translate(0,0) scale(1); }
+            to   { transform: translate(30px,38px) scale(1.08); }
+        }
+
+        .bg-noise {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            opacity: var(--noise-op);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 180px 180px;
+        }
+
+        /* ════════════════════════════════════
+           NAVBAR
+        ════════════════════════════════════ */
+        nav {
+            position: sticky; top: 0; z-index: 999;
+            height: 64px;
+            background: var(--nav-bg);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            border-bottom: 1px solid var(--gb);
+            padding: 0 clamp(1rem, 5vw, 4rem);
+            display: flex; align-items: center; justify-content: space-between;
+            transition: background 0.45s;
+        }
+
+        .logo {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1.32rem; font-weight: 800;
+            letter-spacing: -0.035em;
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none; color: var(--text);
+        }
+        .logo-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: var(--amber);
+            box-shadow: 0 0 10px var(--amber-glow);
+            animation: pulseDot 2.6s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+        @keyframes pulseDot {
+            0%,100% { transform: scale(1);   box-shadow: 0 0 10px var(--amber-glow); }
+            50%      { transform: scale(1.35); box-shadow: 0 0 20px var(--amber-glow); }
+        }
+        .logo-text em { color: var(--amber); font-style: normal; }
+
+        /* Admin badge next to logo */
+        .admin-badge {
+            font-size: 0.65rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            background: var(--amber-soft);
+            border: 1px solid rgba(245,158,11,0.30);
+            color: var(--amber);
+            padding: 3px 9px; border-radius: 99px;
+        }
+
+        .nav-right { display: flex; align-items: center; gap: 8px; }
+
+        .nav-btn {
+            font-family: 'Instrument Sans', sans-serif;
+            font-size: 0.8rem; font-weight: 600;
+            text-decoration: none;
+            padding: 7px 14px; border-radius: 10px;
+            border: 1px solid var(--gb); background: var(--glass);
+            backdrop-filter: blur(12px);
+            color: var(--text-2);
+            display: flex; align-items: center; gap: 6px;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .nav-btn:hover { color: var(--text); border-color: var(--gb-hover); background: var(--glass-md); }
+        .nav-btn.danger { color: var(--danger); border-color: var(--danger-soft); background: var(--danger-soft); }
+        .nav-btn.danger:hover { background: rgba(248,113,113,0.18); border-color: var(--danger); }
+
+        .theme-btn {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: var(--glass); border: 1px solid var(--gb);
+            backdrop-filter: blur(12px);
+            cursor: pointer; display: grid; place-items: center;
+            font-size: 1rem; transition: all 0.2s;
+        }
+        .theme-btn:hover { background: var(--glass-md); border-color: var(--gb-hover); }
+        .icon-moon { display: block; } .icon-sun { display: none; }
+        [data-theme="light"] .icon-moon { display: none; }
+        [data-theme="light"] .icon-sun  { display: block; }
+
+        /* ════════════════════════════════════
+           PAGE CONTENT
+        ════════════════════════════════════ */
+        .page {
+            position: relative; z-index: 1;
+            max-width: 1120px; margin: 0 auto;
+            padding: clamp(2rem, 5vh, 3.5rem) clamp(1rem, 5vw, 4rem) 5rem;
+        }
+
+        /* ── Page header ── */
+        .page-header {
+            display: flex; align-items: flex-start; justify-content: space-between;
+            flex-wrap: wrap; gap: 1.5rem;
+            margin-bottom: 2.5rem;
+            animation: fadeUp 0.55s ease both;
+        }
+        .page-eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--amber-soft);
+            border: 1px solid rgba(245,158,11,0.25);
+            color: var(--amber);
+            font-size: 0.65rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            padding: 4px 12px; border-radius: 99px;
+            margin-bottom: 0.75rem;
+        }
+        .page-eyebrow::before { content: '●'; font-size: 0.45rem; }
+
+        .page-title {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            font-weight: 800; letter-spacing: -0.04em;
+            line-height: 1.1;
+        }
+        .page-title span {
+            background: linear-gradient(130deg, var(--amber) 0%, #fbbf24 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .page-sub {
+            color: var(--text-2); font-size: 0.88rem;
+            margin-top: 0.4rem;
+        }
+
+        /* ── Section label ── */
+        .section-label {
+            font-size: 0.67rem; font-weight: 700;
+            letter-spacing: 0.14em; text-transform: uppercase;
+            color: var(--text-3); margin-bottom: 1.2rem;
+            display: flex; align-items: center; gap: 14px;
+        }
+        .section-label::before, .section-label::after {
+            content: ''; flex: 1; height: 1px; background: var(--gb);
+        }
+
+        /* ════════════════════════════════════
+           STAT CARDS
+        ════════════════════════════════════ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 3rem;
+            animation: fadeUp 0.55s ease 0.08s both;
+        }
+
+        .stat-card {
+            background: var(--glass);
+            border: 1px solid var(--gb);
+            backdrop-filter: blur(26px); -webkit-backdrop-filter: blur(26px);
+            border-radius: 20px;
+            padding: 24px 22px;
+            position: relative; overflow: hidden;
+            transition: transform 0.3s cubic-bezier(0.34,1.4,0.64,1), border-color 0.25s, background 0.25s;
+        }
+        /* Top shimmer */
+        .stat-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent 5%, rgba(245,158,11,0.55) 50%, transparent 95%);
+            pointer-events: none;
+        }
+        /* Inner sheen */
+        .stat-card::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(145deg, rgba(255,255,255,0.06) 0%, transparent 55%);
+            border-radius: inherit; pointer-events: none;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            background: var(--glass-md);
+            border-color: var(--gb-hover);
+        }
+
+        .stat-icon {
+            width: 42px; height: 42px; border-radius: 12px;
+            background: var(--glass-md); border: 1px solid var(--gb);
+            display: grid; place-items: center; font-size: 1.25rem;
+            margin-bottom: 1.1rem;
+            transition: transform 0.3s;
+        }
+        .stat-card:hover .stat-icon { transform: scale(1.1); }
+
+        .stat-label {
+            font-size: 0.65rem; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--text-3); margin-bottom: 0.5rem;
+        }
+        .stat-value {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 3.2rem; font-weight: 800;
+            letter-spacing: -0.05em; line-height: 1;
+            background: linear-gradient(135deg, var(--amber) 0%, #fbbf24 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ════════════════════════════════════
+           QUICK ACTION CARDS
+        ════════════════════════════════════ */
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            animation: fadeUp 0.55s ease 0.16s both;
+        }
+
+        .action-card {
+            background: var(--glass);
+            border: 1px solid var(--gb);
+            backdrop-filter: blur(26px); -webkit-backdrop-filter: blur(26px);
+            border-radius: 20px; padding: 26px 24px;
+            text-decoration: none; color: var(--text);
+            display: flex; align-items: center; gap: 18px;
+            position: relative; overflow: hidden;
+            transition: background 0.25s, border-color 0.25s, transform 0.3s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.3s;
+        }
+        .action-card::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.07) 0%, transparent 55%);
+            border-radius: inherit; pointer-events: none;
+        }
+        .action-card::after {
+            content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, var(--amber), #fbbf24);
+            transform: scaleX(0); transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+        .action-card:hover {
+            background: var(--glass-md);
+            border-color: var(--gb-hover);
+            transform: translateY(-4px) translateX(4px);
+            box-shadow: 0 14px 40px rgba(245,158,11,0.12);
+        }
+        .action-card:hover::after { transform: scaleX(1); }
+
+        .action-icon {
+            width: 56px; height: 56px; border-radius: 16px;
+            background: var(--glass-md); border: 1px solid var(--gb);
+            display: grid; place-items: center; font-size: 1.7rem;
+            flex-shrink: 0; backdrop-filter: blur(10px);
+            transition: transform 0.3s;
+        }
+        .action-card:hover .action-icon { transform: scale(1.08); }
+
+        .action-title {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1.05rem; font-weight: 700; margin-bottom: 4px;
+        }
+        .action-desc { font-size: 0.78rem; color: var(--text-2); line-height: 1.45; }
+
+        .action-arrow {
+            margin-left: auto; font-size: 1.1rem; color: var(--amber);
+            flex-shrink: 0; transition: transform 0.2s;
+        }
+        .action-card:hover .action-arrow { transform: translateX(6px); }
+
+        /* ════════════════════════════════════
+           ANIMATIONS
+        ════════════════════════════════════ */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(22px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ════════════════════════════════════
+           RESPONSIVE
+        ════════════════════════════════════ */
+        @media (max-width: 860px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 560px) {
+            .stats-grid  { grid-template-columns: repeat(2, 1fr); }
+            .actions-grid { grid-template-columns: 1fr; }
+            .nav-btn span { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-mesh">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="bg-noise"></div>
+
+    <nav>
+        <a href="/" class="logo">
+            <div class="logo-dot"></div>
+            <span class="logo-text">EduBot<em>AI</em></span>
+        </a>
+        <div style="display:flex; align-items:center; gap:10px; margin-left:14px;">
+            <span class="admin-badge">🛡️ Admin</span>
+        </div>
+
+        <div class="nav-right">
+            <a href="/admin/users" class="nav-btn"><span>👥</span><span>Manage Users</span></a>
+            <a href="/admin/tests" class="nav-btn"><span>📝</span><span>Monitor Tests</span></a>
+            <a href="/logout" class="nav-btn danger"><span>⏻</span><span>Logout</span></a>
+
+            <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">
+                <span class="icon-moon">🌙</span>
+                <span class="icon-sun">☀️</span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="page">
+
+        <div class="page-header">
+            <div>
+                <div class="page-eyebrow">Admin Portal</div>
+                <h1 class="page-title">System <span>Overview</span></h1>
+                <p class="page-sub">Welcome back, <strong>{{ username }}</strong> — here's what's happening on the platform.</p>
+            </div>
+        </div>
+
+        <div class="section-label">Platform Analytics</div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">👨‍🏫</div>
+                <div class="stat-label">Total Teachers</div>
+                <div class="stat-value">{{ teachers }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">👨‍🎓</div>
+                <div class="stat-label">Total Students</div>
+                <div class="stat-value">{{ students }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📝</div>
+                <div class="stat-label">Tests Created</div>
+                <div class="stat-value">{{ tests }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📬</div>
+                <div class="stat-label">Total Submissions</div>
+                <div class="stat-value">{{ submissions }}</div>
+            </div>
+        </div>
+
+        <div class="section-label">Quick Actions</div>
+
+        <div class="actions-grid">
+            <a href="/admin/users" class="action-card">
+                <div class="action-icon">👥</div>
+                <div>
+                    <div class="action-title">User Management</div>
+                    <div class="action-desc">View, search, and remove teacher or student accounts from the platform.</div>
+                </div>
+                <div class="action-arrow">→</div>
+            </a>
+            <a href="/admin/tests" class="action-card">
+                <div class="action-icon">📊</div>
+                <div>
+                    <div class="action-title">Test Monitoring</div>
+                    <div class="action-desc">Live feed of all tests created and how many students have taken them.</div>
+                </div>
+                <div class="action-arrow">→</div>
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        const html = document.documentElement;
+        const btn  = document.getElementById('themeBtn');
+        if (localStorage.getItem('edubot-theme') === 'light') html.setAttribute('data-theme', 'light');
+        btn.addEventListener('click', () => {
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('edubot-theme', next);
+        });
+    </script>
+</body>
+</html>

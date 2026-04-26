@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards: {{ fset.topic }} — EduBotAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ══════════════════════════════════
+           DARK TOKENS
+        ══════════════════════════════════ */
+        :root {
+            --bg:           #020d18;
+            --orb-1:        rgba(0, 190, 210, 0.30);
+            --orb-2:        rgba(0, 80,  210, 0.26);
+            --orb-3:        rgba(0, 230, 165, 0.16);
+            --glass:        rgba(255,255,255,0.055);
+            --glass-md:     rgba(255,255,255,0.09);
+            --glass-hi:     rgba(255,255,255,0.13);
+            --gb:           rgba(255,255,255,0.10);
+            --gb-hover:     rgba(0,212,232,0.35);
+            --text:         #e8f5ff;
+            --text-2:       rgba(232,245,255,0.55);
+            --text-3:       rgba(232,245,255,0.28);
+            --cyan:         #00d4e8;
+            --cyan-soft:    rgba(0,212,232,0.12);
+            --cyan-glow:    rgba(0,212,232,0.22);
+            --green:        #00e8a0;
+            --nav-bg:       rgba(2,13,24,0.72);
+            --noise-op:     0.038;
+        }
+
+        /* ══════════════════════════════════
+           LIGHT TOKENS
+        ══════════════════════════════════ */
+        [data-theme="light"] {
+            --bg:           #dff2fc;
+            --orb-1:        rgba(0, 150, 185, 0.22);
+            --orb-2:        rgba(0,  70, 190, 0.14);
+            --orb-3:        rgba(0, 190, 140, 0.16);
+            --glass:        rgba(255,255,255,0.52);
+            --glass-md:     rgba(255,255,255,0.66);
+            --glass-hi:     rgba(255,255,255,0.82);
+            --gb:           rgba(0,140,175,0.16);
+            --gb-hover:     rgba(0,122,155,0.40);
+            --text:         #021824;
+            --text-2:       rgba(2,24,36,0.56);
+            --text-3:       rgba(2,24,36,0.36);
+            --cyan:         #006e8a;
+            --cyan-soft:    rgba(0,110,138,0.10);
+            --cyan-glow:    rgba(0,110,138,0.14);
+            --green:        #008060;
+            --nav-bg:       rgba(215,240,252,0.78);
+            --noise-op:     0.018;
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Instrument Sans', sans-serif;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; overflow-x: hidden;
+            display: flex; flex-direction: column;
+            transition: background 0.45s, color 0.45s;
+        }
+
+        /* ── Orb background ── */
+        .bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .orb {
+            position: absolute; border-radius: 50%; filter: blur(95px);
+            animation: floatOrb 16s ease-in-out infinite alternate;
+            transition: background 0.45s;
+        }
+        .orb-1 { width: 680px; height: 680px; background: var(--orb-1); top: -220px; left: -160px; }
+        .orb-2 { width: 560px; height: 560px; background: var(--orb-2); bottom: -120px; right: -100px; animation-delay: -6s; }
+        .orb-3 { width: 400px; height: 400px; background: var(--orb-3); top: 45%; left: 38%; animation-delay: -10s; }
+        @keyframes floatOrb {
+            from { transform: translate(0,0) scale(1); }
+            to   { transform: translate(32px,40px) scale(1.09); }
+        }
+
+        .bg-noise {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            opacity: var(--noise-op);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 180px; transition: opacity 0.45s;
+        }
+
+        /* ══════════════════════════════════
+           NAVBAR
+        ══════════════════════════════════ */
+        nav {
+            position: sticky; top: 0; z-index: 999;
+            height: 62px;
+            background: var(--nav-bg);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            border-bottom: 1px solid var(--gb);
+            padding: 0 clamp(1rem,5vw,4rem);
+            display: flex; align-items: center; justify-content: space-between;
+            transition: background 0.45s;
+        }
+
+        .logo {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1.25rem; font-weight: 800; letter-spacing: -0.03em;
+            text-decoration: none; color: var(--text);
+            display: flex; align-items: center; gap: 9px;
+        }
+        .logo-dot {
+            width: 9px; height: 9px; border-radius: 50%;
+            background: var(--cyan); box-shadow: 0 0 10px var(--cyan-glow);
+            animation: pulseDot 2.6s ease-in-out infinite;
+        }
+        @keyframes pulseDot {
+            0%,100%{ transform:scale(1);   box-shadow:0 0 10px var(--cyan-glow); }
+            50%    { transform:scale(1.35); box-shadow:0 0 20px var(--cyan-glow); }
+        }
+        .logo em { color: var(--cyan); font-style: normal; }
+
+        .nav-right { display: flex; align-items: center; gap: 8px; }
+        .nav-back {
+            font-size: 0.8rem; font-weight: 500; color: var(--text-2);
+            text-decoration: none; padding: 6px 14px; border-radius: 10px;
+            border: 1px solid var(--gb); background: var(--glass);
+            backdrop-filter: blur(10px); transition: all 0.2s;
+        }
+        .nav-back:hover { color: var(--text); border-color: var(--gb-hover); background: var(--glass-md); }
+
+        .theme-btn {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: var(--glass); border: 1px solid var(--gb);
+            backdrop-filter: blur(10px); cursor: pointer;
+            display: grid; place-items: center; font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        .theme-btn:hover { background: var(--glass-md); border-color: var(--gb-hover); }
+        .icon-moon { display: block; } .icon-sun { display: none; }
+        [data-theme="light"] .icon-moon { display: none; }
+        [data-theme="light"] .icon-sun  { display: block; }
+
+        /* ══════════════════════════════════
+           MAIN CONTENT & GRID
+        ══════════════════════════════════ */
+        main {
+            position: relative; z-index: 1;
+            max-width: 1200px; margin: 0 auto;
+            padding: clamp(2rem, 5vw, 3.5rem) clamp(1rem, 5vw, 2rem) 5rem;
+            width: 100%;
+        }
+
+        /* Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeUp 0.6s ease both;
+        }
+        .page-eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--cyan-soft); border: 1px solid var(--gb-hover);
+            border-radius: 100px; padding: 5px 16px;
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
+            text-transform: uppercase; color: var(--cyan);
+            margin-bottom: 1rem;
+        }
+        .page-title {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800; letter-spacing: -0.04em;
+            margin-bottom: 0.5rem; line-height: 1.1;
+        }
+        .page-title .grad {
+            background: linear-gradient(130deg, var(--cyan) 0%, var(--green) 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .page-sub {
+            font-size: 0.9rem; color: var(--text-2);
+            font-style: italic;
+        }
+
+        /* ── Flashcard Grid & 3D Flip ── */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .flip-card {
+            background-color: transparent;
+            height: 280px;
+            perspective: 1000px;
+            cursor: pointer;
+            animation: fadeUp 0.6s ease both;
+        }
+        /* Stagger animations for cards */
+        .flip-card:nth-child(1) { animation-delay: 0.1s; }
+        .flip-card:nth-child(2) { animation-delay: 0.15s; }
+        .flip-card:nth-child(3) { animation-delay: 0.2s; }
+        .flip-card:nth-child(4) { animation-delay: 0.25s; }
+        .flip-card:nth-child(5) { animation-delay: 0.3s; }
+        .flip-card:nth-child(6) { animation-delay: 0.35s; }
+
+        .flip-card-inner {
+            position: relative; width: 100%; height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front, .flip-card-back {
+            position: absolute; width: 100%; height: 100%;
+            -webkit-backface-visibility: hidden; backface-visibility: hidden;
+            border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 2rem;
+            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        /* Front Face (Concept) */
+        .flip-card-front {
+            background: var(--glass);
+            border: 1px solid var(--gb);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2);
+        }
+        .flip-card-front::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(145deg, rgba(255,255,255,0.06) 0%, transparent 60%);
+            border-radius: inherit; pointer-events: none;
+        }
+        .flip-card:hover .flip-card-front {
+            border-color: var(--cyan);
+            box-shadow: 0 10px 40px -10px var(--cyan-glow);
+        }
+        .card-concept {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1.6rem; font-weight: 700;
+            color: var(--text); line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+        .flip-hint {
+            position: absolute; bottom: 16px; left: 0; right: 0;
+            font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em;
+            text-transform: uppercase; color: var(--text-3);
+        }
+
+        /* Back Face (Definition) */
+        .flip-card-back {
+            background: var(--cyan-soft);
+            border: 1px solid var(--cyan);
+            color: var(--text);
+            transform: rotateY(180deg);
+            box-shadow: 0 10px 40px -10px var(--cyan-glow);
+            flex-direction: column;
+            justify-content: center;
+        }
+        .card-def {
+            font-size: 1.05rem; font-weight: 500;
+            line-height: 1.6; color: var(--text);
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(22px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+            .card-grid { grid-template-columns: 1fr; }
+            .flip-card { height: 260px; }
+            .card-concept { font-size: 1.4rem; }
+            .card-def { font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-mesh">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="bg-noise"></div>
+
+    <nav>
+        <a href="/" class="logo">
+            <div class="logo-dot"></div>
+            EduBot<em>AI</em>
+        </a>
+        <div class="nav-right">
+            <a href="/student_dashboard" class="nav-back">← Dashboard</a>
+            <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">
+                <span class="icon-moon">🌙</span>
+                <span class="icon-sun">☀️</span>
+            </button>
+        </div>
+    </nav>
+
+    <main>
+
+        <div class="page-header">
+            <div class="page-eyebrow">🗂️ Interactive Study Deck</div>
+            <h1 class="page-title"><span class="grad">{{ fset.topic }}</span></h1>
+            <p class="page-sub">Click any card to flip it over and reveal the definition!</p>
+        </div>
+
+        <div class="card-grid">
+            {% for card in fset.cards %}
+            <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <h2 class="card-concept">{{ card.front_concept }}</h2>
+                        <div class="flip-hint">Tap to flip</div>
+                    </div>
+                    <div class="flip-card-back">
+                        <p class="card-def">{{ card.back_definition }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+    </main>
+
+    <script>
+        /* ── Theme toggle ── */
+        const html = document.documentElement;
+        const btn  = document.getElementById('themeBtn');
+        if (localStorage.getItem('edubot-theme') === 'light') html.setAttribute('data-theme','light');
+        btn.addEventListener('click', () => {
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('edubot-theme', next);
+        });
+    </script>
+
+</body>
+</html>

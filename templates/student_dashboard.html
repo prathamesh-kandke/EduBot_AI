@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard — EduBotAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ══════════════════════════════════
+           DARK TOKENS
+        ══════════════════════════════════ */
+        :root {
+            --bg:           #020d18;
+            --orb-1:        rgba(0, 190, 210, 0.30);
+            --orb-2:        rgba(0, 80,  210, 0.26);
+            --orb-3:        rgba(0, 230, 165, 0.16);
+            --glass:        rgba(255,255,255,0.055);
+            --glass-md:     rgba(255,255,255,0.09);
+            --glass-hi:     rgba(255,255,255,0.13);
+            --gb:           rgba(255,255,255,0.10);
+            --gb-hover:     rgba(0,212,232,0.35);
+            --text:         #e8f5ff;
+            --text-2:       rgba(232,245,255,0.55);
+            --text-3:       rgba(232,245,255,0.28);
+            --cyan:         #00d4e8;
+            --cyan-soft:    rgba(0,212,232,0.12);
+            --cyan-glow:    rgba(0,212,232,0.22);
+            --green:        #00e8a0;
+            --green-soft:   rgba(0,232,160,0.12);
+            --amber:        #fbbf24;
+            --danger:       #f87171;
+            --danger-bg:    rgba(248,113,113,0.08);
+            --danger-border:rgba(248,113,113,0.35);
+            --nav-bg:       rgba(2,13,24,0.72);
+            --input-bg:     rgba(0,0,0,0.22);
+            --noise-op:     0.038;
+        }
+
+        /* ══════════════════════════════════
+           LIGHT TOKENS
+        ══════════════════════════════════ */
+        [data-theme="light"] {
+            --bg:           #dff2fc;
+            --orb-1:        rgba(0, 150, 185, 0.22);
+            --orb-2:        rgba(0,  70, 190, 0.14);
+            --orb-3:        rgba(0, 190, 140, 0.16);
+            --glass:        rgba(255,255,255,0.52);
+            --glass-md:     rgba(255,255,255,0.66);
+            --glass-hi:     rgba(255,255,255,0.82);
+            --gb:           rgba(0,140,175,0.16);
+            --gb-hover:     rgba(0,122,155,0.40);
+            --text:         #021824;
+            --text-2:       rgba(2,24,36,0.56);
+            --text-3:       rgba(2,24,36,0.36);
+            --cyan:         #006e8a;
+            --cyan-soft:    rgba(0,110,138,0.10);
+            --cyan-glow:    rgba(0,110,138,0.14);
+            --green:        #008060;
+            --green-soft:   rgba(0,128,96,0.10);
+            --amber:        #b45309;
+            --danger:       #dc2626;
+            --danger-bg:    rgba(220,38,38,0.07);
+            --danger-border:rgba(220,38,38,0.28);
+            --nav-bg:       rgba(215,240,252,0.78);
+            --input-bg:     rgba(255,255,255,0.55);
+            --noise-op:     0.018;
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Instrument Sans', sans-serif;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; overflow-x: hidden;
+            display: flex; flex-direction: column;
+            transition: background 0.45s, color 0.45s;
+        }
+
+        /* ── Orb background ── */
+        .bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .orb {
+            position: absolute; border-radius: 50%; filter: blur(95px);
+            animation: floatOrb 16s ease-in-out infinite alternate;
+            transition: background 0.45s;
+        }
+        .orb-1 { width: 680px; height: 680px; background: var(--orb-1); top: -220px; left: -160px; }
+        .orb-2 { width: 560px; height: 560px; background: var(--orb-2); bottom: -120px; right: -100px; animation-delay: -6s; }
+        .orb-3 { width: 400px; height: 400px; background: var(--orb-3); top: 45%; left: 38%; animation-delay: -10s; }
+        @keyframes floatOrb {
+            from { transform: translate(0,0) scale(1); }
+            to   { transform: translate(32px,40px) scale(1.09); }
+        }
+
+        .bg-noise {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            opacity: var(--noise-op);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 180px; transition: opacity 0.45s;
+        }
+
+        /* ══════════════════════════════════
+           NAVBAR
+        ══════════════════════════════════ */
+        nav {
+            position: sticky; top: 0; z-index: 999;
+            height: 64px;
+            background: var(--nav-bg);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            border-bottom: 1px solid var(--gb);
+            padding: 0 clamp(1rem,5vw,4rem);
+            display: flex; align-items: center; justify-content: space-between;
+            transition: background 0.45s;
+        }
+
+        .logo {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 1.32rem; font-weight: 800; letter-spacing: -0.035em;
+            text-decoration: none; color: var(--text);
+            display: flex; align-items: center; gap: 9px;
+        }
+        .logo-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background: var(--cyan); box-shadow: 0 0 10px var(--cyan-glow);
+            animation: pulseDot 2.6s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+        @keyframes pulseDot {
+            0%,100%{ transform:scale(1);   box-shadow:0 0 10px var(--cyan-glow); }
+            50%    { transform:scale(1.35); box-shadow:0 0 20px var(--cyan-glow); }
+        }
+        .logo em { color: var(--cyan); font-style: normal; }
+
+        .nav-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+        /* User pill */
+        .user-pill {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--glass); border: 1px solid var(--gb);
+            border-radius: 100px; padding: 4px 14px 4px 4px;
+            font-size: 0.8rem; font-weight: 600; color: var(--text);
+        }
+        .user-avatar {
+            width: 26px; height: 26px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+            display: grid; place-items: center;
+            font-size: 0.75rem; font-weight: 800; color: #021824;
+        }
+
+        .nav-btn {
+            font-size: 0.8rem; font-weight: 600; color: var(--text-2);
+            text-decoration: none; padding: 7px 14px; border-radius: 10px;
+            border: 1px solid var(--gb); background: var(--glass);
+            backdrop-filter: blur(10px); transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 6px;
+            font-family: 'Instrument Sans', sans-serif;
+        }
+        .nav-btn:hover { color: var(--text); border-color: var(--gb-hover); background: var(--glass-md); }
+
+        .nav-btn.primary {
+            background: linear-gradient(135deg, #00d4e8, #00e8a0);
+            color: #021824; border: none; font-weight: 700;
+            box-shadow: 0 4px 14px rgba(0,212,232,0.25);
+        }
+        .nav-btn.primary:hover {
+            box-shadow: 0 6px 20px rgba(0,212,232,0.4);
+            transform: translateY(-1px); filter: brightness(1.05); color: #021824;
+        }
+
+        .nav-btn.danger { color: var(--danger); border-color: var(--danger-border); background: var(--danger-bg); }
+        .nav-btn.danger:hover { background: rgba(248,113,113,0.18); border-color: var(--danger); color: var(--danger); }
+
+        .theme-btn {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: var(--glass); border: 1px solid var(--gb);
+            backdrop-filter: blur(10px); cursor: pointer;
+            display: grid; place-items: center; font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        .theme-btn:hover { background: var(--glass-md); border-color: var(--gb-hover); }
+        .icon-moon { display: block; } .icon-sun { display: none; }
+        [data-theme="light"] .icon-moon { display: none; }
+        [data-theme="light"] .icon-sun  { display: block; }
+
+        /* ══════════════════════════════════
+           MAIN LAYOUT & GRID
+        ══════════════════════════════════ */
+        .main { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 36px 28px; width: 100%; }
+
+        .page-header { margin-bottom: 28px; animation: floatIn 0.6s ease both; }
+        .page-eyebrow {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--glass); border: 1px solid var(--gb);
+            padding: 4px 14px; border-radius: 99px;
+            font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em;
+            text-transform: uppercase; color: var(--cyan); margin-bottom: 0.75rem;
+        }
+        .page-title {
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800; letter-spacing: -0.03em;
+        }
+        .page-title span {
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 20px; align-items: start;
+        }
+        .left-col { display: flex; flex-direction: column; gap: 20px; }
+        .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+        /* ══════════════════════════════════
+           CARDS
+        ══════════════════════════════════ */
+        .glass-card {
+            background: var(--glass); border: 1px solid var(--gb);
+            backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-radius: 24px; overflow: hidden;
+            transition: background 0.4s, border-color 0.4s;
+            animation: floatIn 0.6s ease both; position: relative;
+        }
+        .glass-card::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, transparent 50%);
+            pointer-events: none; border-radius: inherit;
+        }
+        .glass-card:nth-child(2) { animation-delay: 0.08s; }
+        .glass-card:nth-child(3) { animation-delay: 0.14s; }
+
+        /* Top accent bars */
+        .card-top-bar { height: 2px; width: 100%; position: absolute; top: 0; left: 0; z-index: 2; }
+        .bar-cyan  { background: linear-gradient(90deg, transparent, var(--cyan), transparent); }
+        .bar-green { background: linear-gradient(90deg, transparent, var(--green), transparent); }
+        .bar-amber { background: linear-gradient(90deg, transparent, var(--amber), transparent); }
+
+        .card-inner { padding: 24px; position: relative; z-index: 1; }
+        .card-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .card-icon-sm { font-size: 1.15rem; }
+        .card-title { font-family: 'Bricolage Grotesque', sans-serif; font-size: 1rem; font-weight: 800; letter-spacing: -0.01em; }
+        .card-sub { font-size: 0.8rem; color: var(--text-2); font-weight: 400; line-height: 1.5; margin-bottom: 16px; }
+
+        /* Forms & Inputs */
+        input[type="text"], textarea {
+            width: 100%; padding: 11px 14px;
+            background: var(--input-bg); border: 1px solid var(--gb);
+            border-radius: 12px; color: var(--text);
+            font-size: 0.88rem; font-family: 'Instrument Sans', sans-serif;
+            outline: none; transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+            backdrop-filter: blur(8px);
+        }
+        input::placeholder, textarea::placeholder { color: var(--text-3); }
+        input:focus, textarea:focus {
+            background: var(--glass-md); border-color: var(--cyan);
+            box-shadow: 0 0 0 3px var(--cyan-soft);
+        }
+        textarea { resize: vertical; min-height: 90px; }
+
+        .btn-submit {
+            width: 100%; padding: 12px; margin-top: 12px;
+            background: linear-gradient(135deg, #00d4e8, #00e8a0);
+            color: #021824; border: none; border-radius: 12px;
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 0.9rem; font-weight: 800; cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0,212,232,0.25);
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            transition: transform 0.2s, box-shadow 0.2s, filter 0.2s, opacity 0.2s;
+        }
+        .btn-submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,212,232,0.4); filter: brightness(1.07); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Secondary Button (Advisor) */
+        .btn-advisor {
+            width: 100%; padding: 12px; margin-top: 12px;
+            background: var(--cyan-soft); color: var(--cyan);
+            border: 1px solid rgba(0,212,232,0.25); border-radius: 12px;
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 0.9rem; font-weight: 800; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            transition: all 0.2s;
+        }
+        .btn-advisor:hover:not(:disabled) { background: rgba(0,212,232,0.2); transform: translateY(-2px); }
+
+        .flash-msg { font-size: 0.82rem; color: var(--danger); font-weight: 600; margin-bottom: 12px; }
+
+        /* ── Flashcard List ── */
+        .deck-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+        .deck-link {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--input-bg); border: 1px solid var(--gb);
+            padding: 12px 14px; border-radius: 12px;
+            text-decoration: none; color: var(--text);
+            transition: background 0.2s, border-color 0.2s, transform 0.2s;
+            backdrop-filter: blur(8px);
+        }
+        .deck-link:hover { background: var(--glass-md); border-color: var(--amber); transform: translateX(4px); }
+        .deck-topic { font-weight: 600; font-size: 0.9rem; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .deck-date { font-size: 0.7rem; color: var(--amber); font-weight: 700; background: rgba(251,191,36,0.12); padding: 3px 8px; border-radius: 6px; }
+
+        /* AI output boxes */
+        .ai-box {
+            margin-top: 16px; padding: 16px 20px;
+            background: var(--cyan-soft); border: 1px solid rgba(0,212,232,0.25);
+            border-radius: 14px; display: none;
+            backdrop-filter: blur(10px);
+        }
+        .ai-box.show { display: block; animation: floatIn 0.4s ease both; }
+        .ai-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cyan); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+
+        /* Study Advisor Box gets Green tint */
+        .ai-box.green-ai { background: var(--green-soft); border-color: rgba(0,232,160,0.25); }
+        .ai-box.green-ai .ai-label { color: var(--green); }
+        [data-theme="light"] .ai-box.green-ai .ai-label { color: #059669; }
+        [data-theme="light"] .ai-box .ai-label { color: #006e8a; }
+
+        .prose-output { font-size: 0.85rem; line-height: 1.6; color: var(--text-2); }
+        .prose-output h3 { font-family: 'Bricolage Grotesque', sans-serif; font-size: 0.95rem; font-weight: 700; color: var(--text); margin: 12px 0 6px; }
+        .prose-output p  { margin-bottom: 8px; }
+        .prose-output ul { list-style: disc; margin-left: 20px; margin-bottom: 10px; }
+        .prose-output li { margin-bottom: 4px; }
+        .prose-output strong { font-weight: 700; color: var(--text); }
+
+        /* ── Chart ── */
+        .chart-wrap { position: relative; height: 240px; width: 100%; margin-top: 10px; }
+        .chart-empty { display: flex; align-items: center; justify-content: center; height: 240px; }
+        .chart-empty-text { font-size: 0.85rem; color: var(--text-3); font-style: italic; text-align: center; }
+
+        /* ── Past Scores Table ── */
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: rgba(0,0,0,0.18); border-bottom: 1px solid var(--gb); }
+        [data-theme="light"] thead { background: rgba(0,0,0,0.04); }
+
+        th { padding: 14px 20px; text-align: left; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
+        tbody tr { border-bottom: 1px solid var(--gb); transition: background 0.2s; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: var(--glass-md); }
+        td { padding: 16px 20px; font-size: 0.88rem; vertical-align: middle; }
+
+        .date-text { color: var(--text); font-weight: 500; }
+        .score-text { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; color: var(--text); font-size: 0.95rem; }
+
+        .pending-text { color: var(--amber); font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 4px; }
+        [data-theme="light"] .pending-text { color: #d97706; }
+
+        .type-badge {
+            display: inline-flex; align-items: center; justify-content: center;
+            height: 24px; padding: 0 10px; border-radius: 8px;
+            font-family: 'Bricolage Grotesque', sans-serif;
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+        }
+        .badge-adaptive { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+        .badge-practice { background: var(--cyan-soft); color: var(--cyan); border: 1px solid rgba(0,212,232,0.3); }
+        .badge-class    { background: var(--green-soft); color: var(--green); border: 1px solid rgba(0,232,160,0.3); }
+
+        [data-theme="light"] .badge-adaptive { color: #7e22ce; }
+        [data-theme="light"] .badge-practice { color: #0369a1; }
+        [data-theme="light"] .badge-class    { color: #047857; }
+
+        .empty-row td { text-align: center; padding: 40px; color: var(--text-3); font-size: 0.85rem; font-style: italic; }
+
+        /* ── Action View Button ── */
+        .act-view {
+            background: var(--cyan-soft); color: var(--cyan); border: 1px solid rgba(0,212,232,0.3);
+            text-decoration: none; padding: 6px 12px; border-radius: 8px;
+            font-family: 'Instrument Sans', sans-serif; font-size: 0.78rem; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;
+        }
+        .act-view:hover {
+            background: rgba(0,212,232,0.22); transform: translateY(-2px);
+        }
+
+        @keyframes floatIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Spinner */
+        .spinner {
+            width: 16px; height: 16px; border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: currentColor;
+            animation: spin 0.7s linear infinite; display: none;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 900px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .nav-right span { display: none; }
+            .nav-btn span { display: inline; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-mesh">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="bg-noise"></div>
+
+    <nav>
+        <a href="/" class="logo">
+            <div class="logo-dot"></div>
+            EduBot<em>AI</em>
+        </a>
+        <div class="nav-right">
+            <div class="user-pill">
+                <div class="user-avatar">{{ username[0].upper() }}</div>
+                <span>{{ username }}</span>
+            </div>
+            <a href="/flashcards_setup" class="nav-btn">🗂️ Flashcards</a>
+            <a href="/practice" class="nav-btn">🎯 Practice</a>
+            <a href="/adaptive" class="nav-btn primary">🧠 Adaptive Test</a>
+            <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">
+                <span class="icon-moon">🌙</span>
+                <span class="icon-sun">☀️</span>
+            </button>
+            <a href="/logout" class="nav-btn danger">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                <span>Logout</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="main">
+
+        <div class="page-header">
+            <div class="page-eyebrow">👨‍🎓 Student Portal</div>
+            <div class="page-title">Welcome back, <span>{{ username }}</span> 👋</div>
+        </div>
+
+        <div class="dashboard-grid">
+
+            <div class="left-col">
+
+                <div class="glass-card">
+                    <div class="card-top-bar bar-green"></div>
+                    <div class="card-inner">
+                        <div class="card-title-row">
+                            <span class="card-icon-sm">🏫</span>
+                            <span class="card-title">Join a Class Test</span>
+                        </div>
+                        {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                                <div class="flash-msg">⚠ {{ messages[0] }}</div>
+                            {% endif %}
+                        {% endwith %}
+                        <form action="/student_dashboard" method="POST">
+                            <input type="text" name="test_id" placeholder="Paste Teacher's Test ID…" required autocomplete="off" spellcheck="false" style="font-family:'Courier New',monospace;letter-spacing:0.04em;text-align:center;">
+                            <button type="submit" class="btn-submit">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                Join Exam
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <div class="card-top-bar bar-amber"></div>
+                    <div class="card-inner">
+                        <div class="card-title-row">
+                            <span class="card-icon-sm">🗂️</span>
+                            <span class="card-title">Your Flashcard Decks</span>
+                        </div>
+                        {% if flashcards %}
+                        <ul class="deck-list">
+                            {% for set in flashcards %}
+                            <li>
+                                <a href="/flashcards_view/{{ set.id }}" class="deck-link">
+                                    <span class="deck-topic">{{ set.topic }}</span>
+                                    <span class="deck-date">{{ set.created_at.strftime('%b %d') }}</span>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="card-sub" style="font-style: italic;">No flashcards saved yet. Click "Flashcards" at the top to create a deck!</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <div class="card-top-bar bar-cyan"></div>
+                    <div class="card-inner">
+                        <div class="card-title-row">
+                            <span class="card-icon-sm">💬</span>
+                            <span class="card-title">AI Doubt Solver</span>
+                        </div>
+                        <div class="card-sub">Stuck on a concept? Ask the AI tutor for a simple explanation with examples.</div>
+                        <textarea id="doubtInput" placeholder="e.g. Explain backpropagation in simple terms…"></textarea>
+                        <button class="btn-submit" id="askDoubtBtn" onclick="askDoubt()">
+                            <div class="spinner" id="doubtSpinner"></div>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="doubtIcon"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                            <span id="doubtBtnText">Ask Question</span>
+                        </button>
+                        <div class="ai-box" id="doubtContent">
+                            <div class="ai-label">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                                AI Answer
+                            </div>
+                            <div class="prose-output" id="doubtText"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="right-col">
+
+                <div class="glass-card">
+                    <div class="card-top-bar bar-cyan"></div>
+                    <div class="card-inner">
+                        <div class="card-title-row">
+                            <span class="card-icon-sm">📈</span>
+                            <span class="card-title">Performance Trend (%)</span>
+                        </div>
+                        <div class="chart-wrap">
+                            <canvas id="progressChart"></canvas>
+                            <div class="chart-empty" id="chartEmpty" style="display:none;">
+                                <div class="chart-empty-text">Complete a test to see your progress graph 📊</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <div class="card-top-bar bar-amber"></div>
+                    <div class="card-inner">
+                        <div class="card-title-row">
+                            <span class="card-icon-sm">🎓</span>
+                            <span class="card-title">AI Study Advisor</span>
+                        </div>
+                        <div class="card-sub">Let AI analyze your past tests and generate a personalized study plan targeting your weak areas.</div>
+                        <button class="btn-advisor" id="advisorBtn" onclick="getAdvisor()">
+                            <div class="spinner" id="advisorSpinner"></div>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="advisorIcon"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                            <span id="advisorBtnText">Generate My Study Plan</span>
+                        </button>
+                        <div class="ai-box green-ai" id="advisorContent">
+                            <div class="ai-label">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                                Your Personalized Study Plan
+                            </div>
+                            <div class="prose-output" id="advisorText"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <div class="card-inner" style="padding-bottom:0;">
+                        <div class="card-title-row" style="padding-bottom:16px;">
+                            <span class="card-icon-sm">📋</span>
+                            <span class="card-title">Your Past Scores</span>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Score</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in submissions %}
+                                <tr>
+                                    <td><span class="date-text">📅 {{ sub.created_at.strftime('%Y-%m-%d') }}</span></td>
+                                    <td>
+                                        {% if sub.test.generation_method == 'adaptive' %}
+                                            <span class="type-badge badge-adaptive">Adaptive</span>
+                                        {% elif sub.test.is_practice %}
+                                            <span class="type-badge badge-practice">Practice</span>
+                                        {% else %}
+                                            <span class="type-badge badge-class">Class Exam</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if sub.is_evaluated %}
+                                            <span class="score-text">{{ sub.overall_score }} / {{ sub.total_possible_score }}</span>
+                                        {% else %}
+                                            <span class="pending-text">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                Pending
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if sub.is_evaluated %}
+                                            <a href="/test_evaluation/{{ sub.id }}" class="act-view">
+                                                <span>👀</span> View Results
+                                            </a>
+                                        {% else %}
+                                            <span style="color:var(--text-3); font-size:0.8rem;">--</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% if not submissions %}
+                                <tr class="empty-row">
+                                    <td colspan="4">No tests taken yet — join a class test or start practicing! 🚀</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── Theme ──
+        const html = document.documentElement;
+        const themeBtn = document.getElementById('themeBtn');
+        if (localStorage.getItem('edubot-theme') === 'light') html.setAttribute('data-theme', 'light');
+
+        themeBtn.addEventListener('click', () => {
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('edubot-theme', next);
+            updateChartTheme();
+        });
+
+        // ── Chart.js Setup ──
+        let chartInstance = null;
+
+        function getChartColors() {
+            const isLight = html.getAttribute('data-theme') === 'light';
+            return {
+                grid: isLight ? 'rgba(0,110,138,0.1)' : 'rgba(255,255,255,0.08)',
+                tick: isLight ? 'rgba(2,24,36,0.5)' : 'rgba(232,245,255,0.4)',
+                line: isLight ? '#006e8a' : '#00e8a0',
+                fillTop: isLight ? 'rgba(0,110,138,0.2)' : 'rgba(0,232,160,0.25)',
+                fillBot: isLight ? 'rgba(0,110,138,0.01)' : 'rgba(0,232,160,0.01)'
+            };
+        }
+
+        function updateChartTheme() {
+            if (!chartInstance) return;
+            const c = getChartColors();
+            chartInstance.options.scales.x.grid.color = c.grid;
+            chartInstance.options.scales.y.grid.color = c.grid;
+            chartInstance.options.scales.x.ticks.color = c.tick;
+            chartInstance.options.scales.y.ticks.color = c.tick;
+
+            chartInstance.data.datasets[0].borderColor = c.line;
+            chartInstance.data.datasets[0].pointBackgroundColor = c.line;
+            chartInstance.data.datasets[0].backgroundColor = (context) => {
+                const g = context.chart.ctx.createLinearGradient(0, 0, 0, 240);
+                g.addColorStop(0, c.fillTop);
+                g.addColorStop(1, c.fillBot);
+                return g;
+            };
+            chartInstance.update();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const labels = {{ chart_labels | safe }};
+            const scores = {{ chart_scores | safe }};
+
+            if (labels.length > 0) {
+                const c = getChartColors();
+                const ctx = document.getElementById('progressChart').getContext('2d');
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: 'Score %',
+                            data: scores,
+                            borderColor: c.line,
+                            backgroundColor: (context) => {
+                                const g = context.chart.ctx.createLinearGradient(0, 0, 0, 240);
+                                g.addColorStop(0, c.fillTop);
+                                g.addColorStop(1, c.fillBot);
+                                return g;
+                            },
+                            borderWidth: 3,
+                            pointBackgroundColor: c.line,
+                            pointBorderColor: 'transparent',
+                            pointBorderWidth: 0,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            fill: true, tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        scales: {
+                            x: { grid: { color: c.grid }, ticks: { color: c.tick, font: { family: "'Instrument Sans'" } }, border: { display: false } },
+                            y: { beginAtZero: true, max: 100, ticks: { stepSize: 25, color: c.tick, font: { family: "'Instrument Sans'" } }, grid: { color: c.grid }, border: { display: false } }
+                        },
+                        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y}%` }, titleFont: { family: "'Instrument Sans'" }, bodyFont: { family: "'Instrument Sans'" } } }
+                    }
+                });
+            } else {
+                document.getElementById('progressChart').style.display = 'none';
+                document.getElementById('chartEmpty').style.display = 'flex';
+            }
+        });
+
+        // ── SAFE AI STUDY ADVISOR ──
+        function getAdvisor() {
+            const btn     = document.getElementById('advisorBtn');
+            const spinner = document.getElementById('advisorSpinner');
+            const icon    = document.getElementById('advisorIcon');
+            const txt     = document.getElementById('advisorBtnText');
+            const box     = document.getElementById('advisorContent');
+
+            btn.disabled = true;
+            spinner.style.display = 'block';
+            icon.style.display = 'none';
+            txt.textContent = 'Analyzing past tests...';
+
+            fetch('/api/study_advisor')
+                .then(r => {
+                    if (!r.ok) throw new Error("Server disconnected");
+                    return r.json();
+                })
+                .then(data => {
+                    if(data.advice) {
+                        document.getElementById('advisorText').innerHTML = (typeof marked !== 'undefined') ? marked.parse(data.advice) : data.advice;
+                    } else {
+                        document.getElementById('advisorText').innerHTML = "No advice returned. Please verify Gemini API Key.";
+                    }
+                    box.classList.add('show');
+                    btn.style.display = 'none';
+                })
+                .catch((err) => {
+                    document.getElementById('advisorText').innerHTML = '<strong>Server Error:</strong> The Python backend took too long to respond. Check your terminal for Gemini API limit warnings.';
+                    box.classList.add('show');
+                    btn.disabled = false;
+                    spinner.style.display = 'none';
+                    icon.style.display = 'inline';
+                    txt.textContent = 'Try Again';
+                    console.error(err);
+                });
+        }
+
+        // ── SAFE AI DOUBT SOLVER ──
+        function askDoubt() {
+            const input   = document.getElementById('doubtInput').value;
+            if (!input.trim()) return;
+
+            const btn     = document.getElementById('askDoubtBtn');
+            const spinner = document.getElementById('doubtSpinner');
+            const icon    = document.getElementById('doubtIcon');
+            const txt     = document.getElementById('doubtBtnText');
+            const box     = document.getElementById('doubtContent');
+
+            btn.disabled = true;
+            spinner.style.display = 'block';
+            icon.style.display = 'none';
+            txt.textContent = 'AI is Thinking...';
+
+            fetch('/api/ask_doubt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question: input })
+            })
+            .then(r => {
+                if (!r.ok) throw new Error("Backend Crash or Unauthorized");
+                return r.json();
+            })
+            .then(data => {
+                if(data.answer) {
+                    document.getElementById('doubtText').innerHTML = (typeof marked !== 'undefined') ? marked.parse(data.answer) : data.answer;
+                } else {
+                    document.getElementById('doubtText').innerHTML = "Empty response received. Check API connection.";
+                }
+                box.classList.add('show');
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                icon.style.display = 'inline';
+                txt.textContent = 'Ask Another Question';
+                document.getElementById('doubtInput').value = '';
+            })
+            .catch((err) => {
+                document.getElementById('doubtText').innerHTML = '<span style="color:var(--danger)"><strong>⚠️ Python Error:</strong> The Flask server failed to connect to the Gemini API. Look at the Command Prompt/Terminal where you ran test15.py to see the crash log.</span>';
+                box.classList.add('show');
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                icon.style.display = 'inline';
+                txt.textContent = 'Ask Question';
+                console.error(err);
+            });
+        }
+
+        // Allow Enter key (Ctrl+Enter) to submit doubt
+        document.getElementById('doubtInput').addEventListener('keydown', e => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) askDoubt();
+        });
+    </script>
+</body>
+</html>
