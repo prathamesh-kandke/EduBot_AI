@@ -36,7 +36,7 @@ login_manager.init_app(app)
 login_manager.login_view = 'login_page'
 
 # ===================== CONFIGURATION FOR GEMINI MODELS =====================
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyBKkZduEHPI8wdGyv6SWnFMjYNJJLWrSq0")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", '''Enter API KEY''')
 GEMINI_MODEL_GENERATOR = "gemini-2.5-flash"
 GEMINI_MODEL_EVALUATOR = "gemini-2.5-flash"
 GEMINI_OCR_URL = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
